@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/* Arabic font */
+@font-face {
+  font-family: "tajawal";
+  src: url("./assets/fonts/Tajawal/Tajawal-Regular.ttf");
+}
+
+@font-face {
+  font-family: "tajawal-medium";
+  src: url("./assets/fonts/Tajawal/Tajawal-Medium.ttf");
+}
+
+@font-face {
+  font-family: "tajawal-bold";
+  src: url("./assets/fonts/Tajawal/Tajawal-Bold.ttf");
+}
+
+body {
+  font-family: "tajawal", sans-serif; /* ✅ apply here directly too */
+  direction: rtl;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  font-family: "tajawal", sans-serif;
+}
+
+/* Custom styles for prose content */
+.prose {
+  line-height: 1.8;
+}
+
+.prose h2,
+.prose h3,
+.prose h4 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose p {
+  margin-bottom: 1em;
+}
+
+.prose ul {
+  list-style-type: disc;
+  margin-right: 1.5em;
+  margin-bottom: 1em;
+}

@@ -26,11 +26,14 @@ export default function Login() {
       const token = await cred.user.getIdToken();
 
       // 🔒 Check if blocked
-      const res = await fetch("http://localhost:5000/api/users/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        "https://aljazeera-web.onrender.com/api/users/me",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const data = await res.json();
 
@@ -57,11 +60,14 @@ export default function Login() {
       const cred = await signInWithPopup(auth, provider);
       const token = await cred.user.getIdToken();
 
-      const res = await fetch("http://localhost:5000/api/users/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        "https://aljazeera-web.onrender.com/api/users/me",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const data = await res.json();
 

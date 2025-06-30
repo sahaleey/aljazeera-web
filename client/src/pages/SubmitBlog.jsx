@@ -38,11 +38,14 @@ const SubmitBlog = () => {
       } else {
         const token = await currentUser.getIdToken();
         try {
-          const res = await axios.get("http://localhost:5000/api/users/me", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+          const res = await axios.get(
+            "https://aljazeera-web.onrender.com/api/users/me",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
 
           if (res.data.blocked) {
             alert("❌ تم حظرك من استخدام هذا الموقع");

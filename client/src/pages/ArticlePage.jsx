@@ -36,9 +36,24 @@ const ArticlePage = () => {
     };
 
     // ✅ Listen to Firebase Auth state
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setUserEmail(user.email);
+        const email = user.email;
+        const name = user.displayName || email.split("@")[0];
+        setUserEmail(email);
+
+        try {
+          // ✅ Send user info to MongoDB via your backend
+          await axios.post(
+            "https://aljazeera-web.onrender.com/api/users/register",
+            {
+              email,
+              name,
+            }
+          );
+        } catch (err) {
+          console.error("User registration failed:", err.message);
+        }
       } else {
         setUserEmail(null);
       }
@@ -46,7 +61,7 @@ const ArticlePage = () => {
 
     fetchArticle();
 
-    return () => unsubscribe(); // Cleanup on unmount
+    return () => unsubscribe();
   }, [slug]);
 
   if (loading)

@@ -6,6 +6,7 @@ import { FiClock, FiUser, FiArrowLeft, FiBookOpen } from "react-icons/fi";
 import { FaRegNewspaper } from "react-icons/fa";
 import { auth } from "../firebase"; // adjust path if needed
 import { onAuthStateChanged } from "firebase/auth";
+import { HiBadgeCheck } from "react-icons/hi";
 
 const ArticlePage = () => {
   const { slug } = useParams();
@@ -124,8 +125,16 @@ const ArticlePage = () => {
         <div className="flex items-center flex-wrap gap-4 text-gray-600 mt-4">
           <div className="flex items-center">
             <FiUser className="ml-1 text-green-600" />
-            <span className="font-medium">{article.author}</span>
+            <span className="font-medium flex items-center gap-2">
+              {article.author}
+              {article.email === "ajua46244@gmail.com" && (
+                <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded-full">
+                  👑 Admin
+                </span>
+              )}
+            </span>
           </div>
+
           <div className="flex items-center">
             <FiClock className="ml-1 text-green-600" />
             <span>

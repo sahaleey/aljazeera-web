@@ -168,6 +168,7 @@ const Dashboard = () => {
           </div>
 
           <div className="flex gap-3 flex-wrap">
+            {/* New Article Button */}
             <motion.button
               whileHover={{
                 scale: 1.05,
@@ -182,6 +183,24 @@ const Dashboard = () => {
               <span className="font-medium">مقالة جديدة</span>
             </motion.button>
 
+            {/* 🔐 Admin Panel Button - only visible to admin email */}
+            {user?.email === "ajua46244@gmail.com" && (
+              <motion.button
+                whileHover={{
+                  scale: 1.05,
+                  boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.3)",
+                }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate("/admin-dashboard")}
+                className="relative flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl group"
+              >
+                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 rounded-xl transition-opacity"></div>
+                <FiEdit className="text-lg" />
+                <span className="font-medium">لوحة الإدارة</span>
+              </motion.button>
+            )}
+
+            {/* Sign Out Button */}
             <motion.button
               whileHover={{
                 scale: 1.05,

@@ -9,7 +9,7 @@ const verifyUser = require("../middlewares/verifyUser"); // 🔐 Middleware for 
  * ✅ Register a user after Firebase login
  * Public route: Adds user to MongoDB if not already there
  */
-router.post("/users/register", async (req, res) => {
+router.post("/users/register", verifyUser, async (req, res) => {
   try {
     const { email, name } = req.body;
 
@@ -43,8 +43,21 @@ router.get("/users", verifyAdmin, async (req, res) => {
     res.status(500).json({ message: "خطأ في تحميل المستخدمين" });
   }
 });
-router.get("/users/me", verifyUser, (req, res) => {
-  res.status(200).json(req.user); // includes .blocked
+
+/**
+ * 🔍 Get current user (used to check block status)
+ */
+router.get("/users/me", verifyUser, async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.user.email });
+    if (!user) {
+      return res.status(404).json({ message: "❌ المستخدم غير موجود" });
+    }
+    res.status(200).json(user);
+  } catch (err) {
+    console.error("❌ Error fetching user:", err);
+    res.status(500).json({ message: "فشل في جلب بيانات المستخدم" });
+  }
 });
 
 /**

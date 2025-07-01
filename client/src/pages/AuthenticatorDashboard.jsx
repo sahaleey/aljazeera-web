@@ -37,7 +37,6 @@ const AuthenticatorDashboard = () => {
     totalBlogs: 0,
   });
 
-  // Notification system
   const notify = {
     success: (message) =>
       toast.success(message, {
@@ -90,7 +89,6 @@ const AuthenticatorDashboard = () => {
       setUser(currentUser);
 
       try {
-        // Register the user (if not already)
         await axios.post(
           "https://aljazeera-web.onrender.com/api/users/register",
           {
@@ -98,7 +96,6 @@ const AuthenticatorDashboard = () => {
             name: currentUser.displayName || currentUser.email.split("@")[0],
           }
         );
-
         await checkBlocked(currentUser);
         notify.success(`مرحباً ${currentUser.displayName || "المسؤول"}`);
       } catch (err) {
@@ -145,7 +142,6 @@ const AuthenticatorDashboard = () => {
       );
       setUsers(res.data);
 
-      // Calculate stats
       const blockedCount = res.data.filter((u) => u.blocked).length;
       setStats((prev) => ({
         ...prev,

@@ -10,15 +10,29 @@ export default function Signup() {
 
   const handleSignup = async (e) => {
     e.preventDefault();
+
     try {
       const userCred = await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
-      const token = await userCred.user.getIdToken();
+      const user = userCred.user;
+      const token = await user.getIdToken();
 
-      // Check if blocked
+      // 1️⃣ Register the user in your backend (MongoDB)
+      await fetch("https://aljazeera-web.onrender.com/api/users/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: user.email,
+          name: user.displayName || "",
+        }),
+      });
+
+      // 2️⃣ Check if user is blocked
       const res = await fetch(
         "https://aljazeera-web.onrender.com/api/users/me",
         {
@@ -39,7 +53,7 @@ export default function Signup() {
       alert("✅ تم التسجيل بنجاح!");
       navigate("/home");
     } catch (err) {
-      console.error(err);
+      console.error("Signup error:", err);
       alert("حدث خطأ: " + err.message);
     }
   };

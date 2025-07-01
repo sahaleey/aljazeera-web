@@ -29,7 +29,7 @@ const BlogList = ({ userEmail }) => {
     const fetchArticles = async () => {
       try {
         const res = await axios.get(
-          "https://arabic-36zi.onrender.com/api/blogs"
+          "https://aljazeera-web.onrender.com/api/blogs"
         );
         setArticles(res.data.reverse());
       } catch (err) {
@@ -43,7 +43,7 @@ const BlogList = ({ userEmail }) => {
     if (!userEmail) return navigate("/login");
     try {
       const res = await axios.patch(
-        `https://arabic-36zi.onrender.com/api/blogs/like/${slug}`,
+        `https://aljazeera-web.onrender.com/api/blogs/like/${slug}`,
         { email: userEmail }
       );
 
@@ -67,7 +67,7 @@ const BlogList = ({ userEmail }) => {
     if (!userEmail) return navigate("/login");
     try {
       const res = await axios.patch(
-        `https://arabic-36zi.onrender.com/api/blogs/dislike/${slug}`,
+        `https://aljazeera-web.onrender.com/api/blogs/dislike/${slug}`,
         { email: userEmail }
       );
 
@@ -91,7 +91,7 @@ const BlogList = ({ userEmail }) => {
     if (!userEmail) return;
     try {
       const res = await axios.patch(
-        `https://arabic-36zi.onrender.com/api/blogs/view/${slug}`,
+        `https://aljazeera-web.onrender.com/api/blogs/view/${slug}`,
         { email: userEmail }
       );
 

@@ -18,12 +18,12 @@ const ArticlePage = () => {
     const fetchArticle = async () => {
       try {
         const res = await axios.get(
-          `https://arabic-36zi.onrender.com/api/blogs/${slug}`
+          `https://aljazeera-web.onrender.com/api/blogs/${slug}`
         );
         setArticle(res.data);
 
         const relatedRes = await axios.get(
-          `https://arabic-36zi.onrender.com/api/blogs?category=${res.data.category}`
+          `https://aljazeera-web.onrender.com/api/blogs?category=${res.data.category}`
         );
         const filteredRelated = relatedRes.data.filter((a) => a.slug !== slug);
         setRelated(filteredRelated.slice(0, 3));

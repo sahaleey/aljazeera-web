@@ -10,7 +10,7 @@ const Home = () => {
     const fetchBlogs = async () => {
       try {
         const res = await axios.get(
-          "https://arabic-36zi.onrender.com/api/blogs"
+          "https://aljazeera-web.onrender.com/api/blogs"
         );
         setBlogs(res.data);
       } catch (err) {

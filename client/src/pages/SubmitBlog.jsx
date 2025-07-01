@@ -117,7 +117,7 @@ const SubmitBlog = () => {
 
     try {
       const response = await axios.post(
-        "https://arabic-36zi.onrender.com/api/blogs",
+        "https://aljazeera-web.onrender.com/api/blogs",
         payload
       );
 

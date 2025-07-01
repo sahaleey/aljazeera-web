@@ -33,16 +33,21 @@ const Dashboard = () => {
       if (!currentUser) {
         navigate("/login");
       } else {
-        const token = await currentUser.getIdToken();
+        const email = currentUser.email;
+
         try {
-          const res = await axios.get(
-            "https://aljazeera-web.onrender.com/api/users/me",
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
+          // Ensure user exists in MongoDB
+          await axios.post(
+            "https://aljazeera-web.onrender.com/api/users/register",
+            { email }
           );
 
-          if (res.data.blocked) {
+          // Check if user is blocked
+          const checkRes = await axios.post(
+            "https://aljazeera-web.onrender.com/api/users/check-blocked",
+            { email }
+          );
+          if (checkRes.data.blocked) {
             alert("❌ تم حظرك من استخدام هذا الموقع");
             await auth.signOut();
             navigate("/home");
@@ -50,7 +55,7 @@ const Dashboard = () => {
           }
 
           setUser(currentUser);
-          await fetchUserBlogs(currentUser.email);
+          await fetchUserBlogs(email);
           setLoading(false);
         } catch (err) {
           console.error("🚫 Block check failed:", err);
@@ -72,7 +77,6 @@ const Dashboard = () => {
       const data = res.data;
       setBlogs(data);
 
-      // Calculate stats
       const views = data.reduce((sum, blog) => sum + (blog.views || 0), 0);
       setTotalViews(views);
 

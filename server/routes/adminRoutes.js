@@ -3,7 +3,7 @@ const router = express.Router();
 const User = require("../models/User");
 const Blog = require("../models/Blog");
 const verifyAdmin = require("../middlewares/verifyAdmin");
-const verifyUser = require("../middlewares/verifyUser"); // 🔐 Middleware for Firebase admin check
+const verifyUser = require("../middlewares/verifyUser");
 
 /**
  * ✅ Register a user after Firebase login
@@ -20,7 +20,12 @@ router.post("/users/register", verifyUser, async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
-      user = new User({ email, name });
+      user = new User({
+        email,
+        name,
+        role: "user",
+        blocked: false,
+      });
       await user.save();
     }
 
@@ -28,6 +33,24 @@ router.post("/users/register", verifyUser, async (req, res) => {
   } catch (err) {
     console.error("❌ Registration error:", err);
     res.status(500).json({ message: "فشل تسجيل المستخدم" });
+  }
+});
+
+/**
+ * 🔍 Check if user is blocked (email-based)
+ */
+router.post("/users/check-blocked", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.status(200).json({ blocked: user.blocked });
+  } catch (err) {
+    console.error("❌ Block check error:", err);
+    res.status(500).json({ message: "فشل التحقق من حالة الحظر" });
   }
 });
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import axios from "axios";
+import logo from "../assets/image/logo draw.png"; // Adjust path if needed
 
 const Home = () => {
   const [blogs, setBlogs] = useState([]);
@@ -47,6 +48,7 @@ const Home = () => {
       style={{ fontFamily: "tajawal, sans-serif" }}
     >
       {/* Hero Section */}
+
       <motion.section
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -56,18 +58,28 @@ const Home = () => {
         <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-green-300 rounded-full opacity-10"></div>
         <div className="absolute -top-20 -left-20 w-64 h-64 bg-green-400 rounded-full opacity-10"></div>
 
-        <div className="relative z-10">
-          <h1 className="text-4xl  md:text-5xl lg:text-6xl  font-extrabold mb-6 leading-relaxed">
+        <div className="relative z-10 text-center">
+          {/* 🔰 LOGO IMAGE */}
+
+          <img
+            src={logo}
+            alt="Lisanul Jazeera Logo"
+            className="mx-auto mb-6 w-24 h-14 scale-300 object-contain  rounded-4xl "
+          />
+
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-relaxed">
             مرحباً بكم في{" "}
-            <span className=" bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
               القرطاسية
             </span>
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-2xl leading-relaxed">
+
+          <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto leading-relaxed">
             منصة عربية تقدم محتوى تعليمي وثقافي مميز وملهم للطلاب في جميع
             المراحل الدراسية.
           </p>
-          <div className="flex flex-wrap gap-4">
+
+          <div className="flex flex-wrap gap-4 justify-center">
             <Link
               to="/submit"
               className="inline-block bg-gradient-to-r from-green-700 to-green-600 hover:from-green-800 hover:to-green-700 text-white text-lg px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105"
@@ -83,7 +95,6 @@ const Home = () => {
           </div>
         </div>
       </motion.section>
-
       {/* Blog Previews */}
       <section className="mb-16">
         <motion.h2
@@ -137,7 +148,6 @@ const Home = () => {
           ))}
         </motion.div>
       </section>
-
       {/* About Section */}
       <motion.section
         initial={{ opacity: 0 }}
@@ -221,7 +231,6 @@ const Home = () => {
           </div>
         </div>
       </motion.section>
-
       {/* CTA Section */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}

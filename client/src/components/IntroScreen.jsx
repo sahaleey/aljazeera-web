@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiBookOpen } from "react-icons/fi";
+import logo from "../assets/image/logo draw.png"; // ✅ Make sure the path is correct
 
 const IntroScreen = () => {
   const navigate = useNavigate();
@@ -9,13 +10,13 @@ const IntroScreen = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       navigate("/home");
-    }, 3200); // Matches animation duration
+    }, 5320); // ⏱️ Looks like you had an extra zero 😅
 
     return () => clearTimeout(timer);
   }, [navigate]);
 
   return (
-    <div className="h-screen bg-gradient-to-br from-green-50 to-white flex items-center justify-center overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-green-50 to-white flex items-center justify-center overflow-hidden ">
       <AnimatePresence>
         <motion.div
           key="intro-content"
@@ -23,9 +24,9 @@ const IntroScreen = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center"
+          className="text-center mt-30"
         >
-          {/* Book Icon Animation */}
+          {/* Book Icon */}
           <motion.div
             initial={{ y: -50, rotate: -10, opacity: 0 }}
             animate={{ y: 0, rotate: 0, opacity: 1 }}
@@ -63,7 +64,7 @@ const IntroScreen = () => {
               delay: 0.8,
               duration: 0.5,
             }}
-            className="text-lg text-gray-600"
+            className="text-lg text-gray-600 mb-6"
           >
             منصة المعرفة والتعليم
           </motion.p>
@@ -73,7 +74,7 @@ const IntroScreen = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2 }}
-            className="flex justify-center mt-8 space-x-2"
+            className="flex justify-center mt-4 space-x-2 mb-6"
           >
             {[...Array(3)].map((_, i) => (
               <motion.div
@@ -91,6 +92,16 @@ const IntroScreen = () => {
               />
             ))}
           </motion.div>
+
+          {/* ✅ Logo */}
+          <motion.img
+            src={logo}
+            alt="Logo"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1.5, duration: 0.6 }}
+            className="mx-auto w-24 h-24 object-contain rounded-full mt-15 scale-150 shadow-lg"
+          />
         </motion.div>
       </AnimatePresence>
     </div>

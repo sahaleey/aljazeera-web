@@ -26,7 +26,7 @@ export default function Login() {
       const token = await cred.user.getIdToken();
 
       // 🟢 Register user in MongoDB
-      await fetch("http://localhost:5000/api/users/register", {
+      await fetch("https://aljazeera-web.onrender.com/api/users/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -36,11 +36,14 @@ export default function Login() {
       });
 
       // 🚫 Check if user is blocked
-      const res = await fetch("http://localhost:5000/api/users/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        "https://aljazeera-web.onrender.com/api/users/me",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const data = await res.json();
 
@@ -68,7 +71,7 @@ export default function Login() {
       const token = await cred.user.getIdToken();
 
       // 🟢 Register user in MongoDB
-      await fetch("http://localhost:5000/api/users/register", {
+      await fetch("https://aljazeera-web.onrender.com/api/users/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -78,11 +81,14 @@ export default function Login() {
       });
 
       // 🚫 Check if blocked
-      const res = await fetch("http://localhost:5000/api/users/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        "https://aljazeera-web.onrender.com/api/users/me",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const data = await res.json();
 

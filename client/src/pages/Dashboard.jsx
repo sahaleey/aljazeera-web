@@ -42,7 +42,7 @@ const Dashboard = () => {
 
         // Register user with token
         await axios.post(
-          "http://localhost:5000/api/users/register",
+          "https://aljazeera-web.onrender.com/api/users/register",
           { email },
           {
             headers: {
@@ -54,7 +54,7 @@ const Dashboard = () => {
         // Skip block check for admin
         if (email !== "ajua46244@gmail.com") {
           const checkRes = await axios.post(
-            "http://localhost:5000/api/users/check-blocked",
+            "https://aljazeera-web.onrender.com/api/users/check-blocked",
             { email },
             {
               headers: {
@@ -91,7 +91,7 @@ const Dashboard = () => {
   const fetchUserBlogs = async (email) => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/blogs/user?email=${email}`
+        `https://aljazeera-web.onrender.com/api/blogs/user?email=${email}`
       );
       const data = res.data;
 
@@ -129,7 +129,9 @@ const Dashboard = () => {
   const handleDeleteBlog = async (blogId) => {
     if (window.confirm("هل أنت متأكد من حذف هذه المقالة؟")) {
       try {
-        await axios.delete(`http://localhost:5000/api/blogs/${blogId}`);
+        await axios.delete(
+          `https://aljazeera-web.onrender.com/api/blogs/${blogId}`
+        );
         setBlogs(blogs.filter((blog) => blog._id !== blogId));
         fetchUserBlogs(user.email);
       } catch (err) {

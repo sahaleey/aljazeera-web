@@ -25,7 +25,7 @@ export default function Signup() {
 
       // 2️⃣ Register the user in your backend (MongoDB)
       const registerRes = await fetch(
-        "http://localhost:5000/api/users/register",
+        "https://aljazeera-web.onrender.com/api/users/register",
         {
           method: "POST",
           headers: {
@@ -45,11 +45,14 @@ export default function Signup() {
       }
 
       // 3️⃣ Check if user is blocked
-      const blockCheckRes = await fetch("http://localhost:5000/api/users/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const blockCheckRes = await fetch(
+        "https://aljazeera-web.onrender.com/api/users/me",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const userData = await blockCheckRes.json();
 

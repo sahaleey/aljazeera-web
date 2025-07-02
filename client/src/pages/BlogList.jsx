@@ -28,9 +28,7 @@ const BlogList = ({ userEmail }) => {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const res = await axios.get(
-          "https://aljazeera-web.onrender.com/api/blogs"
-        );
+        const res = await axios.get("http://localhost:5000/api/blogs");
         setArticles(res.data.reverse());
       } catch (err) {
         console.error("Error fetching articles:", err);
@@ -43,7 +41,7 @@ const BlogList = ({ userEmail }) => {
     if (!userEmail) return navigate("/login");
     try {
       const res = await axios.patch(
-        `https://aljazeera-web.onrender.com/api/blogs/like/${slug}`,
+        `http://localhost:5000/api/blogs/like/${slug}`,
         { email: userEmail }
       );
 
@@ -67,7 +65,7 @@ const BlogList = ({ userEmail }) => {
     if (!userEmail) return navigate("/login");
     try {
       const res = await axios.patch(
-        `https://aljazeera-web.onrender.com/api/blogs/dislike/${slug}`,
+        `http://localhost:5000/api/blogs/dislike/${slug}`,
         { email: userEmail }
       );
 
@@ -91,7 +89,7 @@ const BlogList = ({ userEmail }) => {
     if (!userEmail) return;
     try {
       const res = await axios.patch(
-        `https://aljazeera-web.onrender.com/api/blogs/view/${slug}`,
+        `http://localhost:5000/api/blogs/view/${slug}`,
         { email: userEmail }
       );
 

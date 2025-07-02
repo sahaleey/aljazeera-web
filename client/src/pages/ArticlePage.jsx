@@ -18,13 +18,11 @@ const ArticlePage = () => {
   useEffect(() => {
     const fetchArticle = async () => {
       try {
-        const res = await axios.get(
-          `https://aljazeera-web.onrender.com/api/blogs/${slug}`
-        );
+        const res = await axios.get(`http://localhost:5000/api/blogs/${slug}`);
         setArticle(res.data);
 
         const relatedRes = await axios.get(
-          `https://aljazeera-web.onrender.com/api/blogs?category=${res.data.category}`
+          `http://localhost:5000/api/blogs?category=${res.data.category}`
         );
         const filteredRelated = relatedRes.data.filter((a) => a.slug !== slug);
         setRelated(filteredRelated.slice(0, 3));
@@ -44,13 +42,10 @@ const ArticlePage = () => {
 
         try {
           // ✅ Send user info to MongoDB via your backend
-          await axios.post(
-            "https://aljazeera-web.onrender.com/api/users/register",
-            {
-              email,
-              name,
-            }
-          );
+          await axios.post("http://localhost:5000/api/users/register", {
+            email,
+            name,
+          });
         } catch (err) {
           console.error("User registration failed:", err.message);
         }

@@ -15,7 +15,7 @@ import {
   FiEdit,
   FiChevronRight,
 } from "react-icons/fi";
-import { FaRegNewspaper, FaRegComment } from "react-icons/fa";
+import { FaRegNewspaper } from "react-icons/fa";
 import { RiPieChart2Line } from "react-icons/ri";
 
 const Dashboard = () => {
@@ -32,37 +32,56 @@ const Dashboard = () => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (!currentUser) {
         navigate("/login");
-      } else {
-        const email = currentUser.email;
+        return;
+      }
 
-        try {
-          // Ensure user exists in MongoDB
-          await axios.post(
-            "https://aljazeera-web.onrender.com/api/users/register",
-            { email }
-          );
+      const email = currentUser.email;
 
-          // Check if user is blocked
+      try {
+        const token = await currentUser.getIdToken(); // 👈 Get Firebase ID token
+
+        // Register user with token
+        await axios.post(
+          "http://localhost:5000/api/users/register",
+          { email },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // 👈 Add token here
+            },
+          }
+        );
+
+        // Skip block check for admin
+        if (email !== "ajua46244@gmail.com") {
           const checkRes = await axios.post(
-            "https://aljazeera-web.onrender.com/api/users/check-blocked",
-            { email }
+            "http://localhost:5000/api/users/check-blocked",
+            { email },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
           );
-          if (checkRes.data.blocked) {
+
+          if (checkRes.data?.blocked) {
             alert("❌ تم حظرك من استخدام هذا الموقع");
-            await auth.signOut();
+            await signOut(auth);
             navigate("/home");
             return;
           }
-
-          setUser(currentUser);
-          await fetchUserBlogs(email);
-          setLoading(false);
-        } catch (err) {
-          console.error("🚫 Block check failed:", err);
-          alert("حدث خطأ. الرجاء إعادة تسجيل الدخول.");
-          await auth.signOut();
-          navigate("/home");
         }
+
+        setUser(currentUser);
+        await fetchUserBlogs(email);
+        setLoading(false);
+      } catch (err) {
+        console.error(
+          "🚫 Error during auth or block check:",
+          err.response?.data || err.message || err
+        );
+        alert("حدث خطأ. الرجاء إعادة تسجيل الدخول.");
+        await signOut(auth);
+        navigate("/home");
       }
     });
 
@@ -72,22 +91,28 @@ const Dashboard = () => {
   const fetchUserBlogs = async (email) => {
     try {
       const res = await axios.get(
-        `https://aljazeera-web.onrender.com/api/blogs/user?email=${email}`
+        `http://localhost:5000/api/blogs/user?email=${email}`
       );
       const data = res.data;
+
       setBlogs(data);
 
+      // Total views
       const views = data.reduce((sum, blog) => sum + (blog.views || 0), 0);
       setTotalViews(views);
 
-      const mostLiked = data.reduce(
-        (max, blog) =>
-          (blog.likes?.length || 0) > (max.likes?.length || 0) ? blog : max,
-        data[0] || {}
-      );
+      // Top liked blog
+      const mostLiked = data.reduce((max, blog) => {
+        const likes = blog.likes?.length || 0;
+        const maxLikes = max.likes?.length || 0;
+        return likes > maxLikes ? blog : max;
+      }, data[0] || null);
       setTopLikedBlog(mostLiked);
     } catch (err) {
-      console.error("Failed to load blogs:", err);
+      console.error(
+        "🚫 Failed to load blogs:",
+        err.response?.data || err.message || err
+      );
       setError("حدث خطأ أثناء تحميل المقالات");
     }
   };
@@ -97,20 +122,21 @@ const Dashboard = () => {
       await signOut(auth);
       navigate("/home");
     } catch (err) {
-      console.error("Logout error:", err);
+      console.error("🚫 Logout error:", err);
     }
   };
 
   const handleDeleteBlog = async (blogId) => {
     if (window.confirm("هل أنت متأكد من حذف هذه المقالة؟")) {
       try {
-        await axios.delete(
-          `https://aljazeera-web.onrender.com/api/blogs/${blogId}`
-        );
+        await axios.delete(`http://localhost:5000/api/blogs/${blogId}`);
         setBlogs(blogs.filter((blog) => blog._id !== blogId));
         fetchUserBlogs(user.email);
       } catch (err) {
-        console.error("Failed to delete blog:", err);
+        console.error(
+          "🚫 Failed to delete blog:",
+          err.response?.data || err.message || err
+        );
         setError("حدث خطأ أثناء حذف المقالة");
       }
     }

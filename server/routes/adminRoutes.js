@@ -9,9 +9,10 @@ const verifyUser = require("../middlewares/verifyUser");
  * ✅ Register a user after Firebase login
  * Public route: Adds user to MongoDB if not already there
  */
-router.post("/users/register", verifyUser, async (req, res) => {
+router.post("/register", verifyUser, async (req, res) => {
   try {
-    const { email, name } = req.body;
+    const { name } = req.body;
+    const email = req.firebaseUser.email;
 
     if (!email) {
       return res.status(400).json({ message: "📧 البريد الإلكتروني مطلوب" });
@@ -39,7 +40,7 @@ router.post("/users/register", verifyUser, async (req, res) => {
 /**
  * 🔍 Check if user is blocked (email-based)
  */
-router.post("/users/check-blocked", async (req, res) => {
+router.post("/check-blocked", async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ message: "Email is required" });
@@ -57,7 +58,7 @@ router.post("/users/check-blocked", async (req, res) => {
 /**
  * 🔐 Get all users (only accessible by admin)
  */
-router.get("/users", verifyAdmin, async (req, res) => {
+router.get("/", verifyAdmin, async (req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });
     res.status(200).json(users);
@@ -70,7 +71,7 @@ router.get("/users", verifyAdmin, async (req, res) => {
 /**
  * 🔍 Get current user (used to check block status)
  */
-router.get("/users/me", verifyUser, async (req, res) => {
+router.get("/me", verifyUser, async (req, res) => {
   try {
     const user = await User.findOne({ email: req.user.email });
     if (!user) {
@@ -86,7 +87,7 @@ router.get("/users/me", verifyUser, async (req, res) => {
 /**
  * 🔄 Block / Unblock a user (admin only)
  */
-router.put("/users/block/:id", verifyAdmin, async (req, res) => {
+router.put("/block/:id", verifyAdmin, async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {

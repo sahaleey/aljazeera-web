@@ -13,6 +13,7 @@ import ArticlePage from "./pages/ArticlePage";
 import Login from "./components/Login";
 import Dashboard from "./pages/Dashboard";
 import AuthenticatorDashboard from "./pages/AuthenticatorDashboard";
+import Signup from "./components/Signup";
 
 function App() {
   const [userEmail, setUserEmail] = useState("");
@@ -44,6 +45,7 @@ function App() {
           element={<ArticlePage userEmail={userEmail} />}
         />
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
         <Route
           path="/dashboard"
           element={<Dashboard userEmail={userEmail} />}

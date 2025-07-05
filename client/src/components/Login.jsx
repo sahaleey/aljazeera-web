@@ -149,7 +149,6 @@ export default function Login() {
               مرحباً بعودتك! يرجى إدخال بياناتك
             </p>
           </div>
-
           {/* Form */}
           <div className="p-6 md:p-8">
             {error && (
@@ -250,6 +249,12 @@ export default function Login() {
               <FcGoogle className="text-xl ml-2" />
               تسجيل الدخول باستخدام Google
             </motion.button>
+          </div>
+          <div className="text-center text-sm text-gray-700 p-4">
+            ليس لديك حساب؟{" "}
+            <Link to="/signup" className="text-green-600 hover:underline">
+              أنشئ حساباً جديداً
+            </Link>
           </div>
         </motion.div>
       </div>

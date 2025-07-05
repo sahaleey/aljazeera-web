@@ -4,9 +4,9 @@ import axios from "axios";
 import { motion } from "framer-motion";
 import { FiClock, FiUser, FiArrowLeft, FiBookOpen } from "react-icons/fi";
 import { FaRegNewspaper } from "react-icons/fa";
-import { auth } from "../firebase"; // adjust path if needed
+import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { HiBadgeCheck } from "react-icons/hi";
+import md5 from "md5";
 
 const ArticlePage = () => {
   const { slug } = useParams();
@@ -14,6 +14,11 @@ const ArticlePage = () => {
   const [loading, setLoading] = useState(true);
   const [related, setRelated] = useState([]);
   const [userEmail, setUserEmail] = useState(null);
+  const [userPhoto, setUserPhoto] = useState(null);
+
+  // ✅ Gravatar fallback based on email
+  const hash = userEmail ? md5(userEmail.trim().toLowerCase()) : "";
+  const gravatarUrl = `https://www.gravatar.com/avatar/${hash}?d=identicon`;
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -35,15 +40,16 @@ const ArticlePage = () => {
       }
     };
 
-    // ✅ Listen to Firebase Auth state
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const email = user.email;
         const name = user.displayName || email.split("@")[0];
+        const photo = user.photoURL;
+
         setUserEmail(email);
+        setUserPhoto(photo); // 👈 just photo, gravatar fallback is in JSX
 
         try {
-          // ✅ Send user info to MongoDB via your backend
           await axios.post(
             "https://aljazeera-web.onrender.com/api/users/register",
             {
@@ -56,6 +62,7 @@ const ArticlePage = () => {
         }
       } else {
         setUserEmail(null);
+        setUserPhoto(null);
       }
     });
 
@@ -149,7 +156,6 @@ const ArticlePage = () => {
               )}
             </span>
           </div>
-
           <div className="flex items-center">
             <FiClock className="ml-1 text-green-600" />
             <span>
@@ -198,10 +204,27 @@ const ArticlePage = () => {
       >
         <motion.div
           whileHover={{ rotate: 10 }}
-          className="w-20 h-20 rounded-full bg-green-200 flex items-center justify-center text-green-800 font-bold text-3xl shadow-md"
+          className="w-20 h-20 rounded-full overflow-hidden shadow-md bg-green-100 flex items-center justify-center"
         >
-          {article.author.charAt(0)}
+          <img
+            src={`https://www.gravatar.com/avatar/${md5(
+              article.email.trim().toLowerCase()
+            )}?d=identicon`}
+            alt="Author"
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.style.display = "none";
+              e.target.nextSibling.style.display = "flex";
+            }}
+          />
+          <span
+            className="text-green-800 font-bold text-3xl hidden"
+            style={{ display: "none" }}
+          >
+            {article.author?.charAt(0) || "؟"}
+          </span>
         </motion.div>
+
         <div className="text-center md:text-right">
           <h4 className="font-bold text-xl text-green-800">{article.author}</h4>
           <p className="text-gray-600 mt-2 break-all">

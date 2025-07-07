@@ -1,4 +1,3 @@
-// setAdminClaim.js
 const admin = require("firebase-admin");
 
 // Initialize Firebase Admin with your service account key
@@ -8,13 +7,17 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-const uid = "FfowsFZdtIN8jRrIRP9IZR2ybtl2"; // Replace with your user's UID
+const email = "ajua46244@gmail.com"; // 🔁 Replace with your user's email
 
 admin
   .auth()
-  .setCustomUserClaims(uid, { admin: true })
+  .getUserByEmail(email)
+  .then((userRecord) => {
+    const uid = userRecord.uid;
+    return admin.auth().setCustomUserClaims(uid, { admin: true });
+  })
   .then(() => {
-    console.log(`✅ Admin claim set for UID: ${uid}`);
+    console.log(`✅ Admin claim set for email: ${email}`);
     process.exit(0);
   })
   .catch((err) => {

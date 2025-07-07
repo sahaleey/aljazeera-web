@@ -36,7 +36,7 @@ export default function Login() {
         body: JSON.stringify({
           email: cred.user.email,
           name: cred.user.displayName || cred.user.email.split("@")[0],
-          photoUrl: cred.user.photoUrl || "",
+          photoUrl: cred.user.photoURL || "",
         }),
       });
 
@@ -85,7 +85,7 @@ export default function Login() {
         body: JSON.stringify({
           name: cred.user.displayName || cred.user.email.split("@")[0],
           email: cred.user.email,
-          photoUrl: cred.user.photoUrl || "",
+          photoUrl: cred.user.photoURL || "",
         }),
       });
 

@@ -21,6 +21,7 @@ router.post("/register", verifyUser, async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
+      // 🆕 Create new user
       user = new User({
         email,
         name,
@@ -29,8 +30,27 @@ router.post("/register", verifyUser, async (req, res) => {
         photoUrl: photoUrl || "",
         createdAt: new Date(),
       });
-
       await user.save();
+    } else {
+      // 🔁 Update existing user (photo or name if changed)
+      let updated = false;
+
+      if (
+        photoUrl && // only do anything if we actually got a photo
+        (!user.photoUrl || user.photoUrl !== photoUrl) // AND it's different from what's in DB
+      ) {
+        user.photoUrl = photoUrl;
+        updated = true;
+      }
+
+      if (name && user.name !== name) {
+        user.name = name;
+        updated = true;
+      }
+
+      if (updated) {
+        await user.save();
+      }
     }
 
     res.status(200).json(user);

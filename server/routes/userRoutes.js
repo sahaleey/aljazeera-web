@@ -1,7 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const admin = require("firebase-admin");
-const User = require("../models/User"); // MongoDB model
+const User = require("../models/User");
+const verifyUser = require("../middlewares/verifyUser");
+// MongoDB model
 
 // 🔐 Middleware to verify Firebase token
 const verifyToken = async (req, res, next) => {
@@ -10,7 +12,6 @@ const verifyToken = async (req, res, next) => {
   if (!token) {
     return res.status(401).json({ message: "Authorization token missing" });
   }
-
   try {
     const decoded = await admin.auth().verifyIdToken(token);
     req.user = decoded;
@@ -21,49 +22,51 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
-// ✅ REGISTER or UPDATE USER
-router.post("/register", verifyToken, async (req, res) => {
-  const { email, name, photoUrl } = req.body;
-
-  if (!email || !name) {
-    return res.status(400).json({ message: "Email and name are required" });
-  }
-
+router.post("/register", verifyUser, async (req, res) => {
   try {
+    const { name, photoUrl } = req.body;
+    const email = req.firebaseUser?.email;
+
+    if (!email) {
+      return res.status(400).json({ message: "📧 البريد الإلكتروني مطلوب" });
+    }
+
     let user = await User.findOne({ email });
 
     if (!user) {
-      // 🎉 New user registration
+      // 🆕 Create new user
       user = new User({
         email,
         name,
-        photoUrl: photoUrl || "", // fallback to empty string
+        role: "user",
         blocked: false,
+        photoUrl: photoUrl || "",
         createdAt: new Date(),
       });
-
       await user.save();
-      return res.status(201).json({ message: "User registered", user });
+    } else {
+      // 🔁 Update existing user (photo or name if changed)
+      let updated = false;
+
+      if (photoUrl && (!user.photoUrl || user.photoUrl !== photoUrl)) {
+        user.photoUrl = photoUrl;
+        updated = true;
+      }
+
+      if (name && user.name !== name) {
+        user.name = name;
+        updated = true;
+      }
+
+      if (updated) {
+        await user.save();
+      }
     }
 
-    // 🔁 Existing user - update photo if needed
-    let updated = false;
-    if (photoUrl && user.photoUrl !== photoUrl) {
-      user.photoUrl = photoUrl;
-      updated = true;
-    }
-
-    if (updated) {
-      await user.save();
-    }
-
-    return res.status(200).json({
-      message: updated ? "User updated" : "User already exists",
-      user,
-    });
+    res.status(200).json(user);
   } catch (err) {
-    console.error("Error during user registration/update:", err);
-    return res.status(500).json({ message: "Server error" });
+    console.error("❌ Registration error:", err);
+    res.status(500).json({ message: "فشل تسجيل المستخدم" });
   }
 });
 

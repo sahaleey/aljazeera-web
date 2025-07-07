@@ -94,6 +94,7 @@ const AuthenticatorDashboard = () => {
           {
             email: currentUser.email,
             name: currentUser.displayName || currentUser.email.split("@")[0],
+            photoUrl: currentUser.photoURL || "",
           }
         );
         await checkBlocked(currentUser);

@@ -45,7 +45,7 @@ const ArticlePage = () => {
         const photoURL = user.photoURL || "";
         setUserEmail(email);
         setUserPhoto(photoURL);
-        console.log("PhotoURL from backend:", article.photoUrl);
+        console.log("PhotoURL from backend:", article.photoURL);
 
         try {
           const token = await user.getIdToken();

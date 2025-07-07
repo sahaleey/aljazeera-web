@@ -16,10 +16,6 @@ const ArticlePage = () => {
   const [userEmail, setUserEmail] = useState(null);
   const [userPhoto, setUserPhoto] = useState(null);
 
-  // ✅ Gravatar fallback based on email
-  const hash = userEmail ? md5(userEmail.trim().toLowerCase()) : "";
-  const gravatarUrl = `https://www.gravatar.com/avatar/${hash}?d=identicon`;
-
   useEffect(() => {
     const fetchArticle = async () => {
       try {
@@ -27,7 +23,7 @@ const ArticlePage = () => {
           `https://aljazeera-web.onrender.com/api/blogs/${slug}`
         );
         setArticle(res.data);
-
+        console.log(res.data);
         const relatedRes = await axios.get(
           `https://aljazeera-web.onrender.com/api/blogs?category=${res.data.category}`
         );
@@ -44,21 +40,24 @@ const ArticlePage = () => {
       if (user) {
         const email = user.email;
         const name = user.displayName || email.split("@")[0];
-        const photo = user.photoURL;
-
+        const photoURL = user.photoURL || "";
         setUserEmail(email);
-        setUserPhoto(photo); // 👈 just photo, gravatar fallback is in JSX
+        setUserPhoto(photoURL);
 
         try {
+          const token = await user.getIdToken();
+
           await axios.post(
             "https://aljazeera-web.onrender.com/api/users/register",
+            { email, name, photoURL },
             {
-              email,
-              name,
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
             }
           );
         } catch (err) {
-          console.error("User registration failed:", err.message);
+          console.error("🔥 Error saving user to DB:", err.message);
         }
       } else {
         setUserEmail(null);
@@ -67,11 +66,10 @@ const ArticlePage = () => {
     });
 
     fetchArticle();
-
     return () => unsubscribe();
   }, [slug]);
 
-  if (loading)
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center font-[tajawal,sans-serif]">
         <motion.div
@@ -81,8 +79,9 @@ const ArticlePage = () => {
         ></motion.div>
       </div>
     );
+  }
 
-  if (!article)
+  if (!article) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-center px-4">
         <motion.div
@@ -106,9 +105,12 @@ const ArticlePage = () => {
         </Link>
       </div>
     );
+  }
 
   const wordCount = article.content.split(" ").length;
   const readingTime = Math.ceil(wordCount / 200);
+  const authorHash = md5(article.email?.trim().toLowerCase() || "");
+  const gravatarUrl = `https://www.gravatar.com/avatar/${authorHash}?d=identicon`;
 
   return (
     <motion.div
@@ -207,9 +209,7 @@ const ArticlePage = () => {
           className="w-20 h-20 rounded-full overflow-hidden shadow-md bg-green-100 flex items-center justify-center"
         >
           <img
-            src={`https://www.gravatar.com/avatar/${md5(
-              article.email.trim().toLowerCase()
-            )}?d=identicon`}
+            src={article.photoURL || gravatarUrl}
             alt="Author"
             className="w-full h-full object-cover"
             onError={(e) => {

@@ -17,14 +17,16 @@ const verifyToken = async (req, res, next) => {
 
 // ✅ REGISTER ROUTE
 router.post("/register", verifyToken, async (req, res) => {
-  const { email } = req.body;
+  const { email, photoURL } = req.body;
 
   try {
     let existingUser = await User.findOne({ email });
 
     if (!existingUser) {
+      // 🆕 New user
       const newUser = new User({
         email,
+        photoURL, // ✅ Save image URL
         blocked: false,
         createdAt: new Date(),
       });
@@ -33,11 +35,17 @@ router.post("/register", verifyToken, async (req, res) => {
       return res
         .status(201)
         .json({ message: "User registered", user: newUser });
-    }
+    } else {
+      // 🔁 Existing user – update photo if it changed
+      if (photoURL && existingUser.photoURL !== photoURL) {
+        existingUser.photoURL = photoURL;
+        await existingUser.save();
+      }
 
-    res
-      .status(200)
-      .json({ message: "User already exists", user: existingUser });
+      return res
+        .status(200)
+        .json({ message: "User already exists", user: existingUser });
+    }
   } catch (err) {
     console.error("Error registering user:", err);
     res.status(500).json({ message: "Server error" });

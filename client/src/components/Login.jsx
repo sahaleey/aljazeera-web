@@ -9,6 +9,7 @@ import {
 import { auth } from "../firebase";
 import { FcGoogle } from "react-icons/fc";
 import { FiMail, FiLock, FiAlertCircle } from "react-icons/fi";
+import toast from "react-hot-toast";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -48,7 +49,7 @@ export default function Login() {
       const data = await res.json();
 
       if (data.blocked) {
-        alert("❌ لقد تم حظرك من دخول الموقع.");
+        toast.error("❌ لقد تم حظرك من دخول الموقع.");
         await auth.signOut();
         return navigate("/home");
       }
@@ -77,7 +78,10 @@ export default function Login() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ email: cred.user.email }),
+        body: JSON.stringify({
+          email: cred.user.email,
+          photoURL: cred.user.photoURL || "",
+        }),
       });
 
       // 🚫 Check if blocked
@@ -93,7 +97,7 @@ export default function Login() {
       const data = await res.json();
 
       if (data.blocked) {
-        alert("❌ لقد تم حظرك من دخول الموقع.");
+        toast.error("❌ لقد تم حظرك من دخول الموقع.");
         await auth.signOut();
         return navigate("/home");
       }

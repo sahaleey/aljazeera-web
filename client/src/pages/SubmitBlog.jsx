@@ -6,6 +6,7 @@ import { FiUpload, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { slugify } from "transliteration";
+import toast from "react-hot-toast";
 
 const SubmitBlog = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const SubmitBlog = () => {
     email: "",
     category: "",
     content: "",
+    photoURL: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -48,7 +50,7 @@ const SubmitBlog = () => {
           );
 
           if (res.data.blocked) {
-            alert("❌ تم حظرك من استخدام هذا الموقع");
+            toast.error("❌ تم حظرك من استخدام هذا الموقع");
             await auth.signOut();
             navigate("/home");
             return;
@@ -58,10 +60,11 @@ const SubmitBlog = () => {
             ...prev,
             email: currentUser.email,
             author: currentUser.displayName || currentUser.email.split("@")[0],
+            photoURL: currentUser.photoURL || "",
           }));
         } catch (err) {
           console.error("🚫 Block check failed:", err);
-          alert("حدث خطأ. يرجى إعادة تسجيل الدخول.");
+          toast.error("حدث خطأ. يرجى إعادة تسجيل الدخول.");
           await auth.signOut();
           navigate("/home");
         }
@@ -76,7 +79,7 @@ const SubmitBlog = () => {
     if (formData.category === "الأشعار" && formData.content.trim() === "") {
       setFormData((prev) => ({
         ...prev,
-        content: "بيت ١:\n...\nبيت ٢:\n...\nبيت ٣:\n...",
+        content: "اكتب الأسطر بصيغة شعرية",
       }));
     }
   }, [formData.category]);
@@ -110,15 +113,26 @@ const SubmitBlog = () => {
     e.preventDefault();
     setLoading(true);
 
-    const payload = {
-      ...formData,
-      slug: generateSlug(formData.title),
-    };
-
     try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) throw new Error("User not authenticated");
+
+      const token = await currentUser.getIdToken();
+
+      const payload = {
+        ...formData,
+        slug: generateSlug(formData.title),
+        photoURL: formData.photoURL || "",
+      };
+
       const response = await axios.post(
         "https://aljazeera-web.onrender.com/api/blogs",
-        payload
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       if (response.status === 201) {
@@ -138,6 +152,11 @@ const SubmitBlog = () => {
       if (err.response?.status === 409) {
         showNotification(
           "⚠️ هناك مقالة بنفس العنوان منشورة بالفعل. يرجى تغيير العنوان.",
+          "error"
+        );
+      } else if (err.message === "User not authenticated") {
+        showNotification(
+          "❌ لم يتم تسجيل الدخول. يرجى إعادة المحاولة.",
           "error"
         );
       } else {

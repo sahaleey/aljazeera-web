@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
@@ -55,12 +56,12 @@ export default function Signup() {
       const userData = await blockRes.json();
 
       if (userData.blocked) {
-        alert("❌ لقد تم حظرك من استخدام هذا الموقع.");
+        toast.error("❌ لقد تم حظرك من استخدام هذا الموقع.");
         await signOut(auth);
         return navigate("/home");
       }
 
-      alert("✅ تم التسجيل بنجاح!");
+      toast.success("✅ تم التسجيل بنجاح!");
       navigate("/home");
     } catch (err) {
       console.error("Signup error:", err);
@@ -85,7 +86,11 @@ export default function Signup() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ email: cred.user.email }),
+        body: JSON.stringify({
+          email: cred.user.email,
+          photoURL: cred.user.photoURL || "",
+          name: cred.user.displayName || cred.user.email.split("@")[0],
+        }),
       });
 
       const blockRes = await fetch(
@@ -98,12 +103,12 @@ export default function Signup() {
       const userData = await blockRes.json();
 
       if (userData.blocked) {
-        alert("❌ لقد تم حظرك من استخدام هذا الموقع.");
+        toast.error("❌ لقد تم حظرك من استخدام هذا الموقع.");
         await signOut(auth);
         return navigate("/home");
       }
 
-      alert("✅ تم التسجيل بنجاح!");
+      toast.success("✅ تم التسجيل بنجاح!");
       navigate("/home");
     } catch (err) {
       console.error(err);

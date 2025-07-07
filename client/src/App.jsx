@@ -2,7 +2,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
-
+import { Toaster } from "react-hot-toast";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import IntroScreen from "./components/IntroScreen";
@@ -32,6 +32,7 @@ function App() {
 
   return (
     <div className="">
+      <Toaster position="top-right" reverseOrder={false} />
       {!hideLayout && <Navbar userEmail={userEmail} />}
 
       <Routes>

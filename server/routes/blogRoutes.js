@@ -26,21 +26,20 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ✅ Get single blog by slug
 router.get("/:slug", async (req, res) => {
   try {
     const blog = await Blog.findOne({ slug: req.params.slug });
-    blog ? res.json(blog) : res.status(404).json({ error: "Blog not found" });
-    const blogs = await Blog.find().sort({ createdAt: -1 }); // make sure slug is in each item
-    res.json(blogs);
-  } catch {
+    if (!blog) return res.status(404).json({ error: "Blog not found" });
+    res.json(blog);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Failed to fetch blog" });
   }
 });
 
 // ✅ Submit a new blog
 router.post("/", async (req, res) => {
-  const { title, author, content, email, category } = req.body;
+  const { title, author, content, email, category, photoURL } = req.body;
 
   if (!title || !author || !content || !email || !category) {
     return res.status(400).json({ error: "All fields are required" });
@@ -69,6 +68,7 @@ router.post("/", async (req, res) => {
       author,
       content,
       slug,
+      photoUrl: user?.photoURL || "",
       email,
       category,
       likes: [],

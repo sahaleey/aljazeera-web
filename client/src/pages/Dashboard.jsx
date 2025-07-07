@@ -17,6 +17,7 @@ import {
 } from "react-icons/fi";
 import { FaRegNewspaper } from "react-icons/fa";
 import { RiPieChart2Line } from "react-icons/ri";
+import toast from "react-hot-toast";
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -38,7 +39,7 @@ const Dashboard = () => {
       const email = currentUser.email;
 
       try {
-        const token = await currentUser.getIdToken(); // 👈 Get Firebase ID token
+        const token = await currentUser.getIdToken();
 
         // Register user with token
         await axios.post(
@@ -46,7 +47,7 @@ const Dashboard = () => {
           { email },
           {
             headers: {
-              Authorization: `Bearer ${token}`, // 👈 Add token here
+              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -64,7 +65,7 @@ const Dashboard = () => {
           );
 
           if (checkRes.data?.blocked) {
-            alert("❌ تم حظرك من استخدام هذا الموقع");
+            toast.error("❌ تم حظرك من استخدام هذا الموقع");
             await signOut(auth);
             navigate("/home");
             return;
@@ -79,7 +80,7 @@ const Dashboard = () => {
           "🚫 Error during auth or block check:",
           err.response?.data || err.message || err
         );
-        alert("حدث خطأ. الرجاء إعادة تسجيل الدخول.");
+        toast.error("حدث خطأ. الرجاء إعادة تسجيل الدخول.");
         await signOut(auth);
         navigate("/home");
       }

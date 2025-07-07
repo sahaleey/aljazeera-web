@@ -11,7 +11,7 @@ const verifyUser = require("../middlewares/verifyUser");
  */
 router.post("/register", verifyUser, async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, photoURL } = req.body;
     const email = req.firebaseUser.email;
 
     if (!email) {
@@ -26,6 +26,7 @@ router.post("/register", verifyUser, async (req, res) => {
         name,
         role: "user",
         blocked: false,
+        photoURL,
       });
       await user.save();
     }

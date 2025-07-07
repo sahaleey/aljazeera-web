@@ -7,17 +7,13 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-const email = "ajua46244@gmail.com"; // 🔁 Replace with your user's email
+const uid = "FfowsFZdtIN8jRrIRP9IZR2ybtl2"; // Replace with your user's UID
 
 admin
   .auth()
-  .getUserByEmail(email)
-  .then((userRecord) => {
-    const uid = userRecord.uid;
-    return admin.auth().setCustomUserClaims(uid, { admin: true });
-  })
+  .setCustomUserClaims(uid, { admin: true })
   .then(() => {
-    console.log(`✅ Admin claim set for email: ${email}`);
+    console.log(`✅ Admin claim set for UID: ${uid}`);
     process.exit(0);
   })
   .catch((err) => {

@@ -55,24 +55,30 @@ const AuthenticatorDashboard = () => {
   };
 
   useEffect(() => {
+    console.log("[AuthDash] Starting auth check...");
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      console.log("[AuthDash] onAuthStateChanged:", currentUser);
       if (!currentUser) {
         notify.error("يجب تسجيل الدخول أولاً");
-        window.location.href = "/home";
-        return;
+        return (window.location.href = "/home");
       }
 
       try {
-        const tokenResult = await currentUser.getIdTokenResult(true); // force refresh
+        console.log("[AuthDash] Forcing token refresh...");
+        const tokenResult = await currentUser.getIdTokenResult(true);
+        console.log("[AuthDash] tokenResult.claims:", tokenResult.claims);
+
         if (!tokenResult.claims.admin) {
+          console.log("[AuthDash] No admin claim, deny access");
           notify.error("🚫 ليس لديك صلاحية الوصول إلى لوحة التحكم");
-          window.location.href = "/home";
-          return;
+          return (window.location.href = "/home");
         }
 
+        console.log("[AuthDash] ✅ Admin confirmed!");
         setUser(currentUser);
-        setCheckingAdmin(false); // ✅ Done checking, and valid
+        setCheckingAdmin(false);
 
+        // Fetch data as before...
         await axios.post(
           "https://aljazeera-web.onrender.com/api/users/register",
           {
@@ -81,21 +87,19 @@ const AuthenticatorDashboard = () => {
             photoUrl: currentUser.photoURL || "",
           }
         );
-
         await checkBlocked(currentUser);
         notify.success(`مرحباً ${currentUser.displayName || "المسؤول"}`);
-
         const token = await currentUser.getIdToken();
         await fetchUsers(token);
         await fetchBlogs(token);
       } catch (err) {
-        console.error("❌ Admin check error:", err);
+        console.error("[AuthDash] Error during admin check:", err);
         notify.error("حدث خطأ أثناء التحقق من صلاحيات المشرف");
         window.location.href = "/home";
       }
     });
 
-    return () => unsubscribe();
+    return unsubscribe;
   }, []);
 
   const checkBlocked = async (currentUser) => {

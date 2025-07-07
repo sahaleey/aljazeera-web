@@ -17,7 +17,7 @@ const verifyToken = async (req, res, next) => {
 
 // ✅ REGISTER ROUTE
 router.post("/register", verifyToken, async (req, res) => {
-  const { email, photoURL } = req.body;
+  const { email, photoURL, name } = req.body;
 
   try {
     let existingUser = await User.findOne({ email });
@@ -26,7 +26,8 @@ router.post("/register", verifyToken, async (req, res) => {
       // 🆕 New user
       const newUser = new User({
         email,
-        photoURL, // ✅ Save image URL
+        name,
+        photoURL,
         blocked: false,
         createdAt: new Date(),
       });

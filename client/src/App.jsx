@@ -40,7 +40,7 @@ function App() {
         <Route path="/home" element={<Home />} />
         <Route path="/blogs" element={<BlogList userEmail={userEmail} />} />
         <Route path="/submit" element={<SubmitBlog userEmail={userEmail} />} />
-        <Route path="admin-dashboard" element={<AuthenticatorDashboard />} />
+        <Route path="/admin-dashboard" element={<AuthenticatorDashboard />} />
         <Route
           path="/blog/:slug"
           element={<ArticlePage userEmail={userEmail} />}

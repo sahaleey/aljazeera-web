@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { auth } from "../firebase";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import {
   FiTrash2,
@@ -13,18 +13,16 @@ import {
   FiEdit,
   FiRefreshCw,
   FiCheckCircle,
-  FiXCircle,
 } from "react-icons/fi";
-import { FaRegNewspaper, FaUserShield } from "react-icons/fa";
-import { RiAdminLine } from "react-icons/ri";
+import { FaRegNewspaper } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const AuthenticatorDashboard = () => {
   const [user, setUser] = useState(null);
+  const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [users, setUsers] = useState([]);
   const [blogs, setBlogs] = useState([]);
-  const navigate = useNavigate();
   const [loading, setLoading] = useState({
     users: false,
     blogs: false,
@@ -37,38 +35,22 @@ const AuthenticatorDashboard = () => {
     totalBlogs: 0,
   });
 
+  const navigate = useNavigate();
+
   const notify = {
     success: (message) =>
       toast.success(message, {
         position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
         icon: <FiCheckCircle className="text-xl" />,
       }),
     error: (message) =>
       toast.error(message, {
         position: "top-right",
-        autoClose: 4000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
         icon: <FiAlertCircle className="text-xl" />,
       }),
     info: (message) =>
       toast.info(message, {
         position: "top-right",
-        autoClose: 2500,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
       }),
   };
 
@@ -76,19 +58,21 @@ const AuthenticatorDashboard = () => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (!currentUser) {
         notify.error("يجب تسجيل الدخول أولاً");
-        return (window.location.href = "/home");
+        window.location.href = "/home";
+        return;
       }
-
-      const tokenResult = await currentUser.getIdTokenResult(true);
-
-      if (!tokenResult.claims.admin) {
-        notify.error("غير مصرح لك بالوصول إلى لوحة التحكم");
-        return (window.location.href = "/home");
-      }
-
-      setUser(currentUser);
 
       try {
+        const tokenResult = await currentUser.getIdTokenResult(true); // force refresh
+        if (!tokenResult.claims.admin) {
+          notify.error("🚫 ليس لديك صلاحية الوصول إلى لوحة التحكم");
+          window.location.href = "/home";
+          return;
+        }
+
+        setUser(currentUser);
+        setCheckingAdmin(false); // ✅ Done checking, and valid
+
         await axios.post(
           "https://aljazeera-web.onrender.com/api/users/register",
           {
@@ -97,15 +81,18 @@ const AuthenticatorDashboard = () => {
             photoUrl: currentUser.photoURL || "",
           }
         );
+
         await checkBlocked(currentUser);
         notify.success(`مرحباً ${currentUser.displayName || "المسؤول"}`);
-      } catch (err) {
-        console.warn("🟡 Possibly already registered:", err.message);
-      }
 
-      const token = await currentUser.getIdToken();
-      await fetchUsers(token);
-      await fetchBlogs(token);
+        const token = await currentUser.getIdToken();
+        await fetchUsers(token);
+        await fetchBlogs(token);
+      } catch (err) {
+        console.error("❌ Admin check error:", err);
+        notify.error("حدث خطأ أثناء التحقق من صلاحيات المشرف");
+        window.location.href = "/home";
+      }
     });
 
     return () => unsubscribe();
@@ -233,6 +220,15 @@ const AuthenticatorDashboard = () => {
     const token = await user.getIdToken();
     await Promise.all([fetchUsers(token), fetchBlogs(token)]);
   };
+
+  // 🌀 Show loading screen while checking admin access
+  if (checkingAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-lg text-gray-600">
+        جارٍ التحقق من صلاحيات المشرف...
+      </div>
+    );
+  }
 
   if (!user) return null;
 

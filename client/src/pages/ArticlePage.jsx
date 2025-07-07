@@ -45,6 +45,7 @@ const ArticlePage = () => {
         const photoURL = user.photoURL || "";
         setUserEmail(email);
         setUserPhoto(photoURL);
+        console.log("PhotoURL from backend:", article.photoUrl);
 
         try {
           const token = await user.getIdToken();
@@ -111,8 +112,6 @@ const ArticlePage = () => {
 
   const wordCount = article.content.split(" ").length;
   const readingTime = Math.ceil(wordCount / 200);
-  const authorHash = md5(article.email?.trim().toLowerCase() || "");
-  const gravatarUrl = `https://www.gravatar.com/avatar/${authorHash}?d=identicon`;
 
   return (
     <motion.div
@@ -210,15 +209,18 @@ const ArticlePage = () => {
           whileHover={{ rotate: 10 }}
           className="w-20 h-20 rounded-full overflow-hidden shadow-md bg-green-100 flex items-center justify-center"
         >
-          <img
-            src={article.photoURL || gravatarUrl}
-            alt="Author"
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.target.style.display = "none";
-              e.target.nextSibling.style.display = "flex";
-            }}
-          />
+          {article && (
+            <img
+              src={article.photoURL}
+              alt="Author"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = "none";
+                e.target.nextSibling.style.display = "flex";
+              }}
+            />
+          )}
+
           <span
             className="text-green-800 font-bold text-3xl hidden"
             style={{ display: "none" }}

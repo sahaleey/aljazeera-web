@@ -39,7 +39,11 @@ export default function Signup() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ email: user.email }),
+          body: JSON.stringify({
+            email: user.email,
+            name: user.displayName || user.email.split("@")[0],
+            photoURL: user.photoURL || "",
+          }),
         }
       );
 

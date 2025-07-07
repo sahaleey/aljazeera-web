@@ -68,7 +68,7 @@ router.post("/", async (req, res) => {
       author,
       content,
       slug,
-      photoUrl: user?.photoURL || "",
+      photoUrl: photoURL || "",
       email,
       category,
       likes: [],

@@ -42,7 +42,7 @@ export default function Signup() {
           body: JSON.stringify({
             email: user.email,
             name: user.displayName || user.email.split("@")[0],
-            photoURL: user.photoURL || "",
+            photoUrl: user.photoUrl || "",
           }),
         }
       );
@@ -92,7 +92,7 @@ export default function Signup() {
         },
         body: JSON.stringify({
           email: cred.user.email,
-          photoURL: cred.user.photoURL || "",
+          photoUrl: cred.user.photoUrl || "",
           name: cred.user.displayName || cred.user.email.split("@")[0],
         }),
       });

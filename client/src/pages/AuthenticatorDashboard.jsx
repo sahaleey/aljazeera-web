@@ -269,11 +269,11 @@ const AuthenticatorDashboard = () => {
               className="relative bg-gradient-to-br from-blue-100 to-indigo-200 p-1 rounded-full shadow-lg"
             >
               <div className="absolute -inset-1.5 bg-gradient-to-br from-blue-300 to-indigo-400 rounded-full blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
-              {user.photoURL ? (
+              {user.photoUrl ? (
                 <motion.img
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  src={user.photoURL}
+                  src={user.photoUrl}
                   alt="Profile"
                   className="w-14 h-14 rounded-full object-cover border-4 border-white"
                 />

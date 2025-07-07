@@ -36,12 +36,11 @@ const Dashboard = () => {
         return;
       }
 
+      const token = await currentUser.getIdToken();
       const email = currentUser.email;
 
       try {
-        const token = await currentUser.getIdToken();
-
-        // Register user with token
+        // Register (if new)
         await axios.post(
           "https://aljazeera-web.onrender.com/api/users/register",
           { email },
@@ -52,34 +51,34 @@ const Dashboard = () => {
           }
         );
 
-        // Skip block check for admin
-        if (email !== "ajua46244@gmail.com") {
-          const checkRes = await axios.post(
-            "https://aljazeera-web.onrender.com/api/users/check-blocked",
-            { email },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-
-          if (checkRes.data?.blocked) {
-            toast.error("❌ تم حظرك من استخدام هذا الموقع");
-            await signOut(auth);
-            navigate("/home");
-            return;
+        // Get full user profile from MongoDB
+        const res = await axios.get(
+          "https://aljazeera-web.onrender.com/api/users/me",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
+        );
+
+        const backendUser = res.data;
+        console.log("User from backend:", res.data);
+
+        if (
+          backendUser.blocked &&
+          backendUser.email !== "ajua46244@gmail.com"
+        ) {
+          toast.error("❌ تم حظرك من استخدام هذا الموقع");
+          await signOut(auth);
+          navigate("/home");
+          return;
         }
 
-        setUser(currentUser);
+        setUser(backendUser);
         await fetchUserBlogs(email);
         setLoading(false);
       } catch (err) {
-        console.error(
-          "🚫 Error during auth or block check:",
-          err.response?.data || err.message || err
-        );
+        console.error("🚫 Auth error:", err.response?.data || err.message);
         toast.error("حدث خطأ. الرجاء إعادة تسجيل الدخول.");
         await signOut(auth);
         navigate("/home");
@@ -110,10 +109,7 @@ const Dashboard = () => {
       }, data[0] || null);
       setTopLikedBlog(mostLiked);
     } catch (err) {
-      console.error(
-        "🚫 Failed to load blogs:",
-        err.response?.data || err.message || err
-      );
+      console.error("🚫 Blog load error:", err.response?.data || err.message);
       setError("حدث خطأ أثناء تحميل المقالات");
     }
   };
@@ -136,10 +132,7 @@ const Dashboard = () => {
         setBlogs(blogs.filter((blog) => blog._id !== blogId));
         fetchUserBlogs(user.email);
       } catch (err) {
-        console.error(
-          "🚫 Failed to delete blog:",
-          err.response?.data || err.message || err
-        );
+        console.error("🚫 Failed to delete blog:", err.response?.data || err);
         setError("حدث خطأ أثناء حذف المقالة");
       }
     }
@@ -170,11 +163,11 @@ const Dashboard = () => {
               className="relative bg-gradient-to-br from-green-100 to-emerald-200 p-1 rounded-full shadow-lg hover:shadow-xl transition-shadow"
             >
               <div className="absolute -inset-1.5 bg-gradient-to-br from-green-300 to-emerald-400 rounded-full blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
-              {user.photoURL ? (
+              {user?.photoUrl ? (
                 <motion.img
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  src={user.photoURL}
+                  src={user.photoUrl}
                   alt="Profile"
                   className="w-14 h-14 rounded-full object-cover border-4 border-white"
                 />
@@ -187,9 +180,10 @@ const Dashboard = () => {
             <div>
               <motion.h1
                 whileHover={{ x: 5 }}
-                className="text-2xl md:text-3xl font-bold text-gray-800 bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text "
+                className="text-2xl md:text-3xl font-bold text-gray-800 bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text"
               >
-                مرحباً، {user.displayName || user.email.split("@")[0]}
+                مرحباً،{" "}
+                {user.name || user.displayName || user.email.split("@")[0]}
               </motion.h1>
               <motion.p
                 whileHover={{ x: 5 }}
@@ -201,51 +195,36 @@ const Dashboard = () => {
           </div>
 
           <div className="flex gap-3 flex-wrap">
-            {/* New Article Button */}
             <motion.button
-              whileHover={{
-                scale: 1.05,
-                boxShadow: "0 10px 25px -5px rgba(5, 150, 105, 0.4)",
-              }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/submit")}
-              className="relative flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl group"
+              className="px-6 py-3 bg-gradient-to-br from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
             >
-              <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 rounded-xl transition-opacity"></div>
-              <FiPlusCircle className="text-lg" />
-              <span className="font-medium">مقالة جديدة</span>
+              <FiPlusCircle />
+              <span>مقالة جديدة</span>
             </motion.button>
 
-            {/* 🔐 Admin Panel Button - only visible to admin email */}
-            {user?.email === "ajua46244@gmail.com" && (
+            {user.email === "ajua46244@gmail.com" && (
               <motion.button
-                whileHover={{
-                  scale: 1.05,
-                  boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.3)",
-                }}
+                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate("/admin-dashboard")}
-                className="relative flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl group"
+                className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg flex items-center gap-2"
               >
-                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 rounded-xl transition-opacity"></div>
-                <FiEdit className="text-lg" />
-                <span className="font-medium">لوحة الإدارة</span>
+                <FiEdit />
+                <span>لوحة الإدارة</span>
               </motion.button>
             )}
 
-            {/* Sign Out Button */}
             <motion.button
-              whileHover={{
-                scale: 1.05,
-                boxShadow: "0 10px 25px -5px rgba(220, 38, 38, 0.2)",
-              }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleLogout}
-              className="relative flex items-center gap-2 px-6 py-3 bg-white text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition-all shadow-sm hover:shadow-md group"
+              className="px-6 py-3 bg-white text-red-600 border border-red-200 rounded-xl hover:bg-red-50 shadow-sm flex items-center gap-2"
             >
-              <div className="absolute inset-0 bg-red-600 opacity-0 group-hover:opacity-10 rounded-xl transition-opacity"></div>
-              <FiLogOut className="text-lg" />
-              <span className="font-medium">تسجيل الخروج</span>
+              <FiLogOut />
+              <span>تسجيل الخروج</span>
             </motion.button>
           </div>
         </motion.div>

@@ -33,7 +33,11 @@ export default function Login() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ email: cred.user.email, name: cred.user.displayName || cred.user.email.split("@")[0], photoURL: cred.user.photoURL || "" }),
+        body: JSON.stringify({
+          email: cred.user.email,
+          name: cred.user.displayName || cred.user.email.split("@")[0],
+          photoUrl: cred.user.photoUrl || "",
+        }),
       });
 
       // 🚫 Check if user is blocked
@@ -81,7 +85,7 @@ export default function Login() {
         body: JSON.stringify({
           name: cred.user.displayName || cred.user.email.split("@")[0],
           email: cred.user.email,
-          photoURL: cred.user.photoURL || "",
+          photoUrl: cred.user.photoUrl || "",
         }),
       });
 

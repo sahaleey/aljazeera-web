@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    photoURL: { type: String, default: "" },
+    photoUrl: { type: String, default: "" },
     role: { type: String, default: "user" },
   },
   {

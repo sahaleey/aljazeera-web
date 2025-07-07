@@ -39,7 +39,7 @@ router.get("/:slug", async (req, res) => {
 
 // ✅ Submit a new blog
 router.post("/", async (req, res) => {
-  const { title, author, content, email, category, photoURL } = req.body;
+  const { title, author, content, email, category, photoUrl } = req.body;
 
   if (!title || !author || !content || !email || !category) {
     return res.status(400).json({ error: "All fields are required" });
@@ -68,7 +68,7 @@ router.post("/", async (req, res) => {
       author,
       content,
       slug,
-      photoURL: photoURL || "",
+      photoUrl: photoUrl || "",
       email,
       category,
       likes: [],

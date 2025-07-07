@@ -6,13 +6,13 @@ const verifyAdmin = require("../middlewares/verifyAdmin");
 const verifyUser = require("../middlewares/verifyUser");
 
 /**
- * ✅ Register a user after Firebase login
+ * ✅ Register user after Firebase login
  * Public route: Adds user to MongoDB if not already there
  */
 router.post("/register", verifyUser, async (req, res) => {
   try {
-    const { name, photoURL } = req.body;
-    const email = req.firebaseUser.email;
+    const { name, photoUrl } = req.body;
+    const email = req.firebaseUser?.email;
 
     if (!email) {
       return res.status(400).json({ message: "📧 البريد الإلكتروني مطلوب" });
@@ -26,8 +26,10 @@ router.post("/register", verifyUser, async (req, res) => {
         name,
         role: "user",
         blocked: false,
-        photoURL,
+        photoUrl: photoUrl || "",
+        createdAt: new Date(),
       });
+
       await user.save();
     }
 
@@ -39,7 +41,7 @@ router.post("/register", verifyUser, async (req, res) => {
 });
 
 /**
- * 🔍 Check if user is blocked (email-based)
+ * 🔍 Check if user is blocked (by email)
  */
 router.post("/check-blocked", async (req, res) => {
   try {
@@ -57,7 +59,7 @@ router.post("/check-blocked", async (req, res) => {
 });
 
 /**
- * 🔐 Get all users (only accessible by admin)
+ * 🔐 Get all users (Admin only)
  */
 router.get("/", verifyAdmin, async (req, res) => {
   try {
@@ -70,7 +72,7 @@ router.get("/", verifyAdmin, async (req, res) => {
 });
 
 /**
- * 🔍 Get current user (used to check block status)
+ * 🔍 Get current user (based on Firebase token)
  */
 router.get("/me", verifyUser, async (req, res) => {
   try {
@@ -86,14 +88,28 @@ router.get("/me", verifyUser, async (req, res) => {
 });
 
 /**
- * 🔄 Block / Unblock a user (admin only)
+ * 📧 Get user by email (public-ish)
+ */
+router.get("/:email", async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.params.email });
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    res.json(user);
+  } catch (err) {
+    console.error("❌ Error fetching user by email:", err);
+    res.status(500).json({ error: "Failed to fetch user" });
+  }
+});
+
+/**
+ * ⛔ Block / Unblock user (Admin only)
  */
 router.put("/block/:id", verifyAdmin, async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-    if (!user) {
+    if (!user)
       return res.status(404).json({ message: "❗ المستخدم غير موجود" });
-    }
 
     user.blocked = !user.blocked;
     await user.save();
@@ -106,7 +122,7 @@ router.put("/block/:id", verifyAdmin, async (req, res) => {
 });
 
 /**
- * 📚 Get all blogs (admin only)
+ * 📚 Get all blogs (Admin only)
  */
 router.get("/blogs", verifyUser, verifyAdmin, async (req, res) => {
   try {
@@ -119,7 +135,7 @@ router.get("/blogs", verifyUser, verifyAdmin, async (req, res) => {
 });
 
 /**
- * 🗑️ Delete a blog by ID (admin only)
+ * 🗑️ Delete a blog (Admin only)
  */
 router.delete("/blogs/:id", verifyAdmin, async (req, res) => {
   try {

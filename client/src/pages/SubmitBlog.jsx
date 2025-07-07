@@ -17,7 +17,7 @@ const SubmitBlog = () => {
     email: "",
     category: "",
     content: "",
-    photoURL: "",
+    photoUrl: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -60,7 +60,7 @@ const SubmitBlog = () => {
             ...prev,
             email: currentUser.email,
             author: currentUser.displayName || currentUser.email.split("@")[0],
-            photoURL: currentUser.photoURL || "",
+            photoUrl: currentUser.photoUrl || "",
           }));
         } catch (err) {
           console.error("🚫 Block check failed:", err);
@@ -122,7 +122,7 @@ const SubmitBlog = () => {
       const payload = {
         ...formData,
         slug: generateSlug(formData.title),
-        photoURL: formData.photoURL || "",
+        photoUrl: formData.photoUrl || "",
       };
 
       const response = await axios.post(

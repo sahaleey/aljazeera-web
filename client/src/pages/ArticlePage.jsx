@@ -21,13 +21,32 @@ const ArticlePage = () => {
   useEffect(() => {
     const fetchArticle = async () => {
       try {
+        // 1️⃣ Fetch blog data
         const res = await axios.get(
           `https://aljazeera-web.onrender.com/api/blogs/${slug}`
         );
-        setArticle(res.data);
-        console.log(res.data);
+        const blog = res.data;
+        setArticle(blog);
+        console.log("Blog:", blog);
+
+        // 2️⃣ Fetch author profile (photoUrl) using email
+        if (blog?.email) {
+          try {
+            const userRes = await axios.get(
+              `https://aljazeera-web.onrender.com/api/users/${blog.email}`
+            );
+            if (userRes.data?.photoUrl) {
+              setUserPhoto(userRes.data.photoUrl);
+              console.log("Author photo from DB:", userRes.data.photoUrl);
+            }
+          } catch (userErr) {
+            console.warn("⚠️ Could not fetch author photo:", userErr.message);
+          }
+        }
+
+        // 3️⃣ Fetch related blogs
         const relatedRes = await axios.get(
-          `https://aljazeera-web.onrender.com/api/blogs?category=${res.data.category}`
+          `https://aljazeera-web.onrender.com/api/blogs?category=${blog.category}`
         );
         const filteredRelated = relatedRes.data.filter((a) => a.slug !== slug);
         setRelated(filteredRelated.slice(0, 3));
@@ -38,21 +57,22 @@ const ArticlePage = () => {
       }
     };
 
+    // 🔐 Firebase auth listener
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const email = user.email;
         const name = user.displayName || email.split("@")[0];
-        const photoURL = user.photoURL || "";
+        const photoUrl = user.photoUrl || "";
+
         setUserEmail(email);
-        setUserPhoto(photoURL);
-        console.log("PhotoURL from backend:", article.photoURL);
+        console.log("User auth photoUrl:", photoUrl);
 
         try {
           const token = await user.getIdToken();
 
           await axios.post(
             "https://aljazeera-web.onrender.com/api/users/register",
-            { email, name, photoURL },
+            { email, name, photoUrl },
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -69,6 +89,7 @@ const ArticlePage = () => {
     });
 
     fetchArticle();
+
     return () => unsubscribe();
   }, [slug]);
 
@@ -211,7 +232,7 @@ const ArticlePage = () => {
         >
           {article && (
             <img
-              src={article.photoURL}
+              src={userPhoto}
               alt="Author"
               className="w-full h-full object-cover"
               onError={(e) => {

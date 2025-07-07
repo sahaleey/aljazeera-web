@@ -6,6 +6,8 @@ import { FiClock, FiUser, FiArrowLeft, FiBookOpen } from "react-icons/fi";
 import { FaRegNewspaper } from "react-icons/fa";
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { MdAdminPanelSettings } from "react-icons/md";
+
 import md5 from "md5";
 
 const ArticlePage = () => {
@@ -152,8 +154,8 @@ const ArticlePage = () => {
             <span className="font-medium flex items-center gap-2">
               {article.author}
               {article.email === "ajua46244@gmail.com" && (
-                <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded-full">
-                  👑 Admin
+                <span className="bg-yellow-100 flex gap-1 text-yellow-800 text-xs px-2 py-0.5 rounded-full">
+                  <MdAdminPanelSettings /> Admin
                 </span>
               )}
             </span>

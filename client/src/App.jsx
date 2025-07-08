@@ -32,7 +32,7 @@ function App() {
 
   return (
     <div className="">
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster position="top-left" reverseOrder={false} />
       {!hideLayout && <Navbar userEmail={userEmail} />}
 
       <Routes>

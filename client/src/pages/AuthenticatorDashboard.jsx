@@ -4,6 +4,9 @@ import { motion } from "framer-motion";
 import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
+import { FaUserShield } from "react-icons/fa";
+import { AnimatePresence } from "framer-motion";
+
 import {
   FiTrash2,
   FiUserX,
@@ -17,6 +20,7 @@ import {
 import { FaRegNewspaper } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { RiAdminLine } from "react-icons/ri";
 
 const AuthenticatorDashboard = () => {
   const [user, setUser] = useState(null);
@@ -36,6 +40,7 @@ const AuthenticatorDashboard = () => {
   });
 
   const navigate = useNavigate();
+  const adminEmails = ["ajua46244@gmail.com"];
 
   const notify = {
     success: (message) =>
@@ -60,42 +65,44 @@ const AuthenticatorDashboard = () => {
       console.log("[AuthDash] onAuthStateChanged:", currentUser);
       if (!currentUser) {
         notify.error("يجب تسجيل الدخول أولاً");
-        return (window.location.href = "/home");
+        return navigate("/home");
       }
 
+      if (!adminEmails.includes(currentUser.email)) {
+        notify.error("🚫 ليس لديك صلاحية الوصول إلى لوحة التحكم");
+        return navigate("/home");
+      }
+
+      console.log("[AuthDash] ✅ Email matched admin list!");
+      setUser(currentUser);
+      setCheckingAdmin(false);
+
       try {
-        console.log("[AuthDash] Forcing token refresh...");
-        const tokenResult = await currentUser.getIdTokenResult(true);
-        console.log("[AuthDash] tokenResult.claims:", tokenResult.claims);
+        const token = await currentUser.getIdToken();
 
-        if (!tokenResult.claims.admin) {
-          console.log("[AuthDash] No admin claim, deny access");
-          notify.error("🚫 ليس لديك صلاحية الوصول إلى لوحة التحكم");
-          return (window.location.href = "/home");
-        }
-
-        console.log("[AuthDash] ✅ Admin confirmed!");
-        setUser(currentUser);
-        setCheckingAdmin(false);
-
-        // Fetch data as before...
         await axios.post(
           "https://aljazeera-web.onrender.com/api/users/register",
           {
             email: currentUser.email,
             name: currentUser.displayName || currentUser.email.split("@")[0],
             photoUrl: currentUser.photoURL || "",
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // ✅ Token added here
+            },
           }
         );
+
         await checkBlocked(currentUser);
         notify.success(`مرحباً ${currentUser.displayName || "المسؤول"}`);
-        const token = await currentUser.getIdToken();
+
         await fetchUsers(token);
         await fetchBlogs(token);
       } catch (err) {
-        console.error("[AuthDash] Error during admin check:", err);
-        notify.error("حدث خطأ أثناء التحقق من صلاحيات المشرف");
-        window.location.href = "/home";
+        console.error("[AuthDash] Error during admin flow:", err);
+        notify.error("حدث خطأ أثناء التحقق من البيانات");
+        navigate("/home");
       }
     });
 
@@ -115,7 +122,7 @@ const AuthenticatorDashboard = () => {
       if (res.data.blocked) {
         notify.error("تم حظرك من استخدام هذا الموقع");
         await auth.signOut();
-        window.location.href = "/home";
+        navigate("/home");
       }
     } catch (err) {
       console.error("⚠️ Error checking blocked status:", err.message);
@@ -225,7 +232,6 @@ const AuthenticatorDashboard = () => {
     await Promise.all([fetchUsers(token), fetchBlogs(token)]);
   };
 
-  // 🌀 Show loading screen while checking admin access
   if (checkingAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center text-lg text-gray-600">

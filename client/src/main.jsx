@@ -8,7 +8,7 @@ import ScrollToTop from "./components/ScrollToTop";
 const RouterWrapper = () => {
   return (
     <BrowserRouter>
-      <ScrollToTop /> {/* This will handle scroll to top on navigation */}
+      <ScrollToTop />
       <App />
     </BrowserRouter>
   );

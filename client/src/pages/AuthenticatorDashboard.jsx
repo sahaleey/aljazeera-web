@@ -60,9 +60,7 @@ const AuthenticatorDashboard = () => {
   };
 
   useEffect(() => {
-    console.log("[AuthDash] Starting auth check...");
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      console.log("[AuthDash] onAuthStateChanged:", currentUser);
       if (!currentUser) {
         notify.error("يجب تسجيل الدخول أولاً");
         return navigate("/home");
@@ -73,7 +71,6 @@ const AuthenticatorDashboard = () => {
         return navigate("/home");
       }
 
-      console.log("[AuthDash] ✅ Email matched admin list!");
       setUser(currentUser);
       setCheckingAdmin(false);
 

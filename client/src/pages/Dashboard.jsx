@@ -62,7 +62,6 @@ const Dashboard = () => {
         );
 
         const backendUser = res.data;
-        console.log("User from backend:", res.data);
 
         if (
           backendUser.blocked &&

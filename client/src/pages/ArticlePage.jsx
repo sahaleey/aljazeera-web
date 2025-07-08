@@ -27,7 +27,6 @@ const ArticlePage = () => {
         );
         const blog = res.data;
         setArticle(blog);
-        console.log("Blog:", blog);
 
         // 2️⃣ Fetch author profile (photoUrl) using email
         if (blog?.email) {
@@ -37,7 +36,6 @@ const ArticlePage = () => {
             );
             if (userRes.data?.photoUrl) {
               setUserPhoto(userRes.data.photoUrl);
-              console.log("Author photo from DB:", userRes.data.photoUrl);
             }
           } catch (userErr) {
             console.warn("⚠️ Could not fetch author photo:", userErr.message);
@@ -65,7 +63,6 @@ const ArticlePage = () => {
         const photoUrl = user.photoUrl || "";
 
         setUserEmail(email);
-        console.log("User auth photoUrl:", photoUrl);
 
         try {
           const token = await user.getIdToken();

@@ -231,12 +231,42 @@ const AuthenticatorDashboard = () => {
 
   if (checkingAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-lg text-gray-600">
-        جارٍ التحقق من صلاحيات المشرف...
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
+        <div className="max-w-md w-full text-center space-y-6">
+          {/* Animated loading indicator */}
+          <div className="relative h-3 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="absolute top-0 left-0 h-full bg-blue-600 rounded-full animate-loading-pulse"
+              style={{ width: "70%" }}
+            ></div>
+          </div>
+
+          {/* Content with better typography */}
+          <div className="space-y-2">
+            <h3 className="text-xl font-semibold text-gray-800">
+              جارٍ التحقق من صلاحيات المشرف
+            </h3>
+            <p className="text-gray-500 text-sm">
+              قد تستغرق العملية بضع ثوانٍ، الرجاء الانتظار...
+            </p>
+          </div>
+
+          {/* Optional decorative elements */}
+          <div className="flex justify-center">
+            <div className="flex space-x-2">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="w-2 h-2 bg-green-400 rounded-full animate-bounce"
+                  style={{ animationDelay: `${i * 0.2}s` }}
+                ></div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
-
   if (!user) return null;
 
   return (

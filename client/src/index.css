@@ -15,7 +15,33 @@
   font-family: "tajawal-bold";
   src: url("./assets/fonts/Tajawal/Tajawal-Bold.ttf");
 }
+@keyframes loading-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
 
+.animate-loading-pulse {
+  animation: loading-pulse 1.5s ease-in-out infinite;
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
 body {
   font-family: "tajawal", sans-serif; /* ✅ apply here directly too */
   direction: rtl;

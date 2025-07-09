@@ -758,41 +758,39 @@ const AuthenticatorDashboard = () => {
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                               <div className="flex justify-end gap-2">
                                 {/* Verify Button */}
-                                <motion.button
-                                  whileHover={{
-                                    scale: 1.1,
-                                    backgroundColor: "rgba(34,197,94,0.1)",
+                            <motion.button
+                              whileHover={{
+                                scale: 1.1,
+                                backgroundColor: "rgba(34,197,94,0.1)",
+                              }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => toggleVerifyBlog(blog._id)}
+                              disabled={
+                                loading.actions || verifying === blog._id
+                              }
+                              className={`p-2 rounded-lg ${
+                                blog.verified
+                                  ? "text-green-600 hover:bg-green-50"
+                                  : "text-gray-400 hover:bg-gray-100"
+                              } transition-colors`}
+                              title={
+                                blog.verified ? "تم التحقق" : "تحقق من المقال"
+                              }
+                            >
+                              {verifying === blog._id ? (
+                                <motion.div
+                                  animate={{ rotate: 360 }}
+                                  transition={{
+                                    duration: 1,
+                                    repeat: Infinity,
+                                    ease: "linear",
                                   }}
-                                  whileTap={{ scale: 0.9 }}
-                                  onClick={() => toggleVerifyBlog(blog._id)}
-                                  disabled={
-                                    loading.actions || verifying === blog._id
-                                  }
-                                  className={`p-2 rounded-lg ${
-                                    blog.verified
-                                      ? "text-green-600 hover:bg-green-50"
-                                      : "text-gray-400 hover:bg-gray-100"
-                                  } transition-colors`}
-                                  title={
-                                    blog.verified
-                                      ? "تم التحقق"
-                                      : "تحقق من المقال"
-                                  }
-                                >
-                                  {verifying === blog._id ? (
-                                    <motion.div
-                                      animate={{ rotate: 360 }}
-                                      transition={{
-                                        duration: 1,
-                                        repeat: Infinity,
-                                        ease: "linear",
-                                      }}
-                                      className="w-4 h-4 border-2 border-current border-t-transparent rounded-full"
-                                    />
-                                  ) : (
-                                    <FiCheckCircle className="text-lg" />
-                                  )}
-                                </motion.button>
+                                  className="w-4 h-4 border-2 border-current border-t-transparent rounded-full"
+                                />
+                              ) : (
+                                <FiCheckCircle className="text-lg" />
+                              )}
+                            </motion.button>
                                 {/* Delete Button */}
                                 <motion.button
                                   whileHover={{

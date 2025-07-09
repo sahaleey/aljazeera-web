@@ -91,6 +91,12 @@ router.get("/", verifyAdmin, async (req, res) => {
   }
 });
 
+router.get("/status/:email", async (req, res) => {
+  const user = await User.findOne({ email: req.params.email });
+  if (!user) return res.status(404).json({ blocked: false });
+  res.json({ blocked: user.blocked });
+});
+
 /**
  * 🔍 Get current user (based on Firebase token)
  */

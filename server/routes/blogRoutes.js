@@ -26,44 +26,59 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/:slug", async (req, res) => {
+// ✅ Get all verified blogs
+router.get("/verified", async (req, res) => {
   try {
-    const blog = await Blog.findOne({ slug: req.params.slug });
-    if (!blog) return res.status(404).json({ error: "Blog not found" });
-    res.json(blog);
+    const verifiedBlogs = await Blog.find({ verified: true }).sort({
+      createdAt: -1,
+    });
+    res.json(verifiedBlogs);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch blog" });
+    res.status(500).json({ error: "Failed to fetch verified blogs" });
+  }
+});
+
+// ✅ Get points by community
+router.get("/points", async (req, res) => {
+  try {
+    const verifiedBlogs = await Blog.find({ verified: true });
+
+    const communityPoints = {};
+
+    verifiedBlogs.forEach((blog) => {
+      const key = blog.community.toLowerCase();
+      if (!communityPoints[key]) communityPoints[key] = 0;
+
+      let points = 1;
+      if (blog.likes?.length >= 10) points += 1;
+      if (blog.likes?.length >= 25) points += 1;
+      if (blog.views >= 50) points += 1;
+
+      communityPoints[key] += points;
+    });
+
+    res.json(communityPoints);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to calculate community points" });
   }
 });
 
 // ✅ Submit a new blog
 router.post("/", async (req, res) => {
-  const {
-    title,
-    author,
-    content,
-    email,
-    category,
-    photoUrl,
-
-    community,
-  } = req.body;
+  const { title, author, content, email, category, photoUrl, community } =
+    req.body;
 
   if (!title || !author || !content || !email || !category || !community) {
     return res.status(400).json({ error: "All fields are required" });
   }
 
-  // Slugify: Handles Arabic + Latin titles
   let baseSlug = slugify(title)
     .toLowerCase()
     .replace(/[^\w]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-  // Fallback for pure Arabic (slugify might return empty)
   if (!baseSlug) baseSlug = `blog-${Date.now()}`;
 
-  // Ensure uniqueness
   let slug = baseSlug;
   let counter = 1;
 
@@ -90,36 +105,19 @@ router.post("/", async (req, res) => {
 
     await blog.save();
     res.status(201).json(blog);
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
     res.status(500).json({ error: "Failed to post blog" });
   }
 });
 
-// Add to your blog route (before the verified route)
-router.get("/points", async (req, res) => {
+// ✅ Fetch blog by slug
+router.get("/:slug", async (req, res) => {
   try {
-    const verifiedBlogs = await Blog.find({ verified: true });
-
-    const communityPoints = {};
-
-    verifiedBlogs.forEach((blog) => {
-      const key = blog.community.toLowerCase();
-      if (!communityPoints[key]) communityPoints[key] = 0;
-
-      // Same calculation as frontend
-      let points = 1;
-      if (blog.likes?.length >= 10) points += 1;
-      if (blog.likes?.length >= 25) points += 1;
-      if (blog.views >= 50) points += 1;
-
-      communityPoints[key] += points;
-    });
-
-    res.json(communityPoints);
+    const blog = await Blog.findOne({ slug: req.params.slug });
+    if (!blog) return res.status(404).json({ error: "Blog not found" });
+    res.json(blog);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to calculate community points" });
+    res.status(500).json({ error: "Failed to fetch blog" });
   }
 });
 
@@ -133,32 +131,8 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to delete blog" });
   }
 });
-// ✅ Get all verified blogs
-router.get("/verified", async (req, res) => {
-  try {
-    const verifiedBlogs = await Blog.find({ verified: true }).sort({
-      createdAt: -1,
-    });
-    res.json(verifiedBlogs);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch verified blogs" });
-  }
-});
 
-// ✅ Fetch BLOG BY SLUG — should be after "verified" route
-router.get("/:slug", async (req, res) => {
-  try {
-    const blog = await Blog.findOne({ slug: req.params.slug });
-    if (!blog) return res.status(404).json({ error: "Blog not found" });
-    res.json(blog);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch blog" });
-  }
-});
-
-// ✅ Increment views (once per user)
+// ✅ Increment views
 router.patch("/view/:slug", async (req, res) => {
   const { email } = req.body;
   try {
@@ -177,7 +151,7 @@ router.patch("/view/:slug", async (req, res) => {
   }
 });
 
-// ✅ Like or unlike blog
+// ✅ Like / unlike
 router.patch("/like/:slug", async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: "Email is required" });
@@ -187,10 +161,10 @@ router.patch("/like/:slug", async (req, res) => {
     if (!blog) return res.status(404).json({ error: "Blog not found" });
 
     if (blog.likes.includes(email)) {
-      blog.likes.pull(email); // Unlike
+      blog.likes.pull(email);
     } else {
-      blog.likes.push(email); // Like
-      blog.dislikes.pull(email); // Remove dislike if exists
+      blog.likes.push(email);
+      blog.dislikes.pull(email);
     }
 
     await blog.save();
@@ -205,7 +179,7 @@ router.patch("/like/:slug", async (req, res) => {
   }
 });
 
-// ✅ Dislike or undo dislike
+// ✅ Dislike / undo
 router.patch("/dislike/:slug", async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: "Email is required" });
@@ -215,10 +189,10 @@ router.patch("/dislike/:slug", async (req, res) => {
     if (!blog) return res.status(404).json({ error: "Blog not found" });
 
     if (blog.dislikes.includes(email)) {
-      blog.dislikes.pull(email); // Undo dislike
+      blog.dislikes.pull(email);
     } else {
-      blog.dislikes.push(email); // Dislike
-      blog.likes.pull(email); // Remove like if exists
+      blog.dislikes.push(email);
+      blog.likes.pull(email);
     }
 
     await blog.save();
@@ -230,6 +204,22 @@ router.patch("/dislike/:slug", async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to update dislikes" });
+  }
+});
+
+// ✅ Admin: verify/unverify blog
+router.patch("/:id/verify", async (req, res) => {
+  const { verified } = req.body;
+  try {
+    const blog = await Blog.findByIdAndUpdate(
+      req.params.id,
+      { verified },
+      { new: true }
+    );
+    if (!blog) return res.status(404).json({ error: "Blog not found" });
+    res.json(blog);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to verify blog" });
   }
 });
 

@@ -96,6 +96,33 @@ router.post("/", async (req, res) => {
   }
 });
 
+// Add to your blog route (before the verified route)
+router.get("/points", async (req, res) => {
+  try {
+    const verifiedBlogs = await Blog.find({ verified: true });
+
+    const communityPoints = {};
+
+    verifiedBlogs.forEach((blog) => {
+      const key = blog.community.toLowerCase();
+      if (!communityPoints[key]) communityPoints[key] = 0;
+
+      // Same calculation as frontend
+      let points = 1;
+      if (blog.likes?.length >= 10) points += 1;
+      if (blog.likes?.length >= 25) points += 1;
+      if (blog.views >= 50) points += 1;
+
+      communityPoints[key] += points;
+    });
+
+    res.json(communityPoints);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to calculate community points" });
+  }
+});
+
 // ✅ Delete blog
 router.delete("/:id", async (req, res) => {
   try {

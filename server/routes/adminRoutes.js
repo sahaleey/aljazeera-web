@@ -160,6 +160,43 @@ router.get("/blogs", verifyUser, verifyAdmin, async (req, res) => {
   }
 });
 
+// Add to your admin route
+router.get("/community-stats", verifyAdmin, async (req, res) => {
+  try {
+    const verifiedBlogs = await Blog.find({ verified: true });
+
+    const stats = {};
+
+    verifiedBlogs.forEach((blog) => {
+      const key = blog.community.toLowerCase();
+      if (!stats[key]) {
+        stats[key] = {
+          count: 0,
+          points: 0,
+          likes: 0,
+          views: 0,
+        };
+      }
+
+      // Calculate points (same as frontend)
+      let points = 1;
+      if (blog.likes?.length >= 10) points += 1;
+      if (blog.likes?.length >= 25) points += 1;
+      if (blog.views >= 50) points += 1;
+
+      stats[key].count++;
+      stats[key].points += points;
+      stats[key].likes += blog.likes?.length || 0;
+      stats[key].views += blog.views || 0;
+    });
+
+    res.status(200).json(stats);
+  } catch (err) {
+    console.error("❌ Error fetching community stats:", err);
+    res.status(500).json({ message: "خطأ في جلب إحصائيات المجتمعات" });
+  }
+});
+
 /**
  * ✅ Verify a blog (Admin only)
  */

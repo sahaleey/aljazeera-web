@@ -24,6 +24,8 @@ import { RiAdminLine } from "react-icons/ri";
 
 const AuthenticatorDashboard = () => {
   const [user, setUser] = useState(null);
+  const [verifying, setVerifying] = useState(null);
+
   const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [users, setUsers] = useState([]);
   const [blogs, setBlogs] = useState([]);
@@ -105,6 +107,34 @@ const AuthenticatorDashboard = () => {
 
     return unsubscribe;
   }, []);
+
+  //to verify or unverify a blog
+
+  const toggleVerifyBlog = async (id) => {
+    setVerifying(id);
+    try {
+      const token = await user.getIdToken();
+      const res = await axios.put(
+        `https://aljazeera-web.onrender.com/api/blogs/verify/${id}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      notify.success(
+        res.data.verified
+          ? "✅ تم التحقق من المقال"
+          : "❎ تم إزالة التحقق من المقال"
+      );
+      await fetchBlogs(token);
+    } catch (err) {
+      console.error("❌ Error verifying blog:", err);
+      notify.error("حدث خطأ أثناء التحقق من المقال");
+    } finally {
+      setVerifying(null);
+    }
+  };
 
   const checkBlocked = async (currentUser) => {
     try {
@@ -713,6 +743,40 @@ const AuthenticatorDashboard = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end gap-2">
+                            {/* Verify Button */}
+                            <motion.button
+                              whileHover={{
+                                scale: 1.1,
+                                backgroundColor: "rgba(34,197,94,0.1)",
+                              }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => toggleVerifyBlog(blog._id)}
+                              disabled={
+                                loading.actions || verifying === blog._id
+                              }
+                              className={`p-2 rounded-lg ${
+                                blog.verified
+                                  ? "text-green-600 hover:bg-green-50"
+                                  : "text-gray-400 hover:bg-gray-100"
+                              } transition-colors`}
+                              title={
+                                blog.verified ? "تم التحقق" : "تحقق من المقال"
+                              }
+                            >
+                              {verifying === blog._id ? (
+                                <motion.div
+                                  animate={{ rotate: 360 }}
+                                  transition={{
+                                    duration: 1,
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                  }}
+                                  className="w-4 h-4 border-2 border-current border-t-transparent rounded-full"
+                                />
+                              ) : (
+                                <FiCheckCircle className="text-lg" />
+                              )}
+                            </motion.button>
                             {/* Delete Button */}
                             <motion.button
                               whileHover={{

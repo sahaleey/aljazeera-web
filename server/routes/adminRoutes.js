@@ -161,6 +161,26 @@ router.get("/blogs", verifyUser, verifyAdmin, async (req, res) => {
 });
 
 /**
+ * ✅ Verify a blog (Admin only)
+ */
+// ✅ Toggle Blog Verification (Admin Only)
+router.put("/blogs/verify/:id", verifyAdmin, async (req, res) => {
+  try {
+    const blog = await Blog.findById(req.params.id);
+    if (!blog)
+      return res.status(404).json({ message: "❌ المقالة غير موجودة" });
+
+    blog.verified = !blog.verified;
+    await blog.save();
+
+    res.status(200).json({ success: true, verified: blog.verified });
+  } catch (err) {
+    console.error("❌ Error verifying blog:", err);
+    res.status(500).json({ message: "فشل التحقق من المقالة" });
+  }
+});
+
+/**
  * 🗑️ Delete a blog (Admin only)
  */
 router.delete("/blogs/:id", verifyAdmin, async (req, res) => {

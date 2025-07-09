@@ -106,7 +106,7 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to delete blog" });
   }
 });
-// ✅ Get only verified blogs
+// ✅ Get all verified blogs
 router.get("/verified", async (req, res) => {
   try {
     const verifiedBlogs = await Blog.find({ verified: true }).sort({
@@ -114,7 +114,20 @@ router.get("/verified", async (req, res) => {
     });
     res.json(verifiedBlogs);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Failed to fetch verified blogs" });
+  }
+});
+
+// ✅ Fetch BLOG BY SLUG — should be after "verified" route
+router.get("/:slug", async (req, res) => {
+  try {
+    const blog = await Blog.findOne({ slug: req.params.slug });
+    if (!blog) return res.status(404).json({ error: "Blog not found" });
+    res.json(blog);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch blog" });
   }
 });
 

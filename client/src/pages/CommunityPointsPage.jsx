@@ -3,7 +3,7 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiChevronDown, FiChevronUp, FiCheckCircle } from "react-icons/fi";
 
-// Arabic display names for communities
+// Arabic community labels
 const communityNames = {
   ihya: "إحياء",
   nour: "نور",
@@ -30,14 +30,10 @@ const CommunityPoints = () => {
         );
 
         const verifiedBlogs = res.data.filter(
-          (blog) =>
-            blog.verified &&
-            blog.community &&
-            Object.keys(communityNames).includes(blog.community.toLowerCase())
+          (blog) => blog.verified && blog.community
         );
 
         const grouped = {};
-
         verifiedBlogs.forEach((blog) => {
           const key = blog.community.toLowerCase();
           if (!grouped[key]) grouped[key] = [];

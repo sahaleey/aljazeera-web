@@ -26,6 +26,22 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.put("/blogs/verify/:id", async (req, res) => {
+  try {
+    const blog = await Blog.findById(req.params.id);
+    if (!blog)
+      return res.status(404).json({ message: "❌ المقالة غير موجودة" });
+
+    blog.verified = !blog.verified;
+    await blog.save();
+
+    res.status(200).json({ success: true, verified: blog.verified });
+  } catch (err) {
+    console.error("❌ Error verifying blog:", err);
+    res.status(500).json({ message: "فشل التحقق من المقالة" });
+  }
+});
+
 router.get("/:slug", async (req, res) => {
   try {
     const blog = await Blog.findOne({ slug: req.params.slug });

@@ -171,7 +171,7 @@ const ArticlePage = () => {
           {article.title}
           {article.verified && (
             <FiCheckCircle
-              className="inline text-green-600"
+              className="inline text-cyan-600"
               title="مقال موثوق"
             />
           )}

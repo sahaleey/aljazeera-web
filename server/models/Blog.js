@@ -18,6 +18,8 @@ const blogSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  community: { type: String, required: true },
+
   verified: {
     type: Boolean,
     default: false,

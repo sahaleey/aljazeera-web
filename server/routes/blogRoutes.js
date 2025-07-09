@@ -26,8 +26,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-
-
 router.get("/:slug", async (req, res) => {
   try {
     const blog = await Blog.findOne({ slug: req.params.slug });
@@ -41,7 +39,8 @@ router.get("/:slug", async (req, res) => {
 
 // ✅ Submit a new blog
 router.post("/", async (req, res) => {
-  const { title, author, content, email, category, photoUrl } = req.body;
+  const { title, author, content, email, category, photoUrl, community } =
+    req.body;
 
   if (!title || !author || !content || !email || !category) {
     return res.status(400).json({ error: "All fields are required" });
@@ -69,6 +68,7 @@ router.post("/", async (req, res) => {
       title,
       author,
       content,
+      community,
       slug,
       photoUrl: photoUrl || "",
       email,

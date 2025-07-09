@@ -18,6 +18,7 @@ const SubmitBlog = () => {
     category: "",
     content: "",
     photoUrl: "",
+    community: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -256,6 +257,29 @@ const SubmitBlog = () => {
                   {c}
                 </option>
               ))}
+            </select>
+          </div>
+          {/* Community Selector */}
+          <div>
+            <label className="block text-lg font-medium text-gray-800 mb-3">
+              المجتمع / الفصل *
+            </label>
+            <select
+              name="community"
+              value={formData.community}
+              onChange={handleChange}
+              required
+              disabled={loading}
+              className="w-full px-5 py-3 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-400 transition bg-white"
+            >
+              <option value="">اختر المجتمع / الفصل</option>
+              <option value="Urdu">جناح الأردية</option>
+              <option value="Arabic">جناح العربية</option>
+              <option value="English">جناح الإنجليزية</option>
+              <option value="Media">جناح الإعلام</option>
+              <option value="Class 1">الفصل 1</option>
+              <option value="Class 2">الفصل 2</option>
+              <option value="General">عام / غير مصنف</option>
             </select>
           </div>
 

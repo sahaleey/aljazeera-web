@@ -692,125 +692,131 @@ const AuthenticatorDashboard = () => {
               </h3>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      العنوان
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      الناشر
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      التاريخ
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      الإجراءات
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  <AnimatePresence>
-                    {blogs.map((blog) => (
-                      <motion.tr
-                        key={blog._id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, x: -50 }}
-                        transition={{ duration: 0.3 }}
-                        className="hover:bg-purple-50/50 transition-colors"
-                      >
-                        <td className="px-6 py-4">
-                          <div className="text-sm font-medium text-gray-900 line-clamp-1">
-                            {blog.title}
-                          </div>
-                          <div className="text-sm text-gray-500 mt-1 flex flex-wrap gap-2">
-                            <span className="px-2 py-0.5 bg-gray-100 rounded-full text-xs">
-                              {blog.category || "بدون تصنيف"}
-                            </span>
-                            <span className="flex items-center gap-1 text-xs">
-                              <FiEye className="text-blue-500" />
-                              {blog.views || 0} مشاهدة
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {blog.author?.email || blog.author || "غير معروف"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(blog.createdAt).toLocaleDateString("ar-EG")}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex justify-end gap-2">
-                            {/* Verify Button */}
-                            <motion.button
-                              whileHover={{
-                                scale: 1.1,
-                                backgroundColor: "rgba(34,197,94,0.1)",
-                              }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => toggleVerifyBlog(blog._id)}
-                              disabled={
-                                loading.actions || verifying === blog._id
-                              }
-                              className={`p-2 rounded-lg ${
-                                blog.verified
-                                  ? "text-green-600 hover:bg-green-50"
-                                  : "text-gray-400 hover:bg-gray-100"
-                              } transition-colors`}
-                              title={
-                                blog.verified ? "تم التحقق" : "تحقق من المقال"
-                              }
-                            >
-                              {verifying === blog._id ? (
-                                <motion.div
-                                  animate={{ rotate: 360 }}
-                                  transition={{
-                                    duration: 1,
-                                    repeat: Infinity,
-                                    ease: "linear",
-                                  }}
-                                  className="w-4 h-4 border-2 border-current border-t-transparent rounded-full"
-                                />
-                              ) : (
-                                <FiCheckCircle className="text-lg" />
+            Object.entries(
+              blogs.reduce((acc, blog) => {
+                const community = blog.community || "بدون قسم";
+                if (!acc[community]) acc[community] = [];
+                acc[community].push(blog);
+                return acc;
+              }, {})
+            ).map(([communityName, communityBlogs]) => (
+              <div key={communityName} className="mb-10">
+                <h3 className="text-lg font-semibold text-purple-800 mb-3 border-b pb-1 border-purple-200">
+                  🏷️ {communityName}
+                </h3>
+                <div className="overflow-x-auto rounded-xl border border-purple-100 shadow-sm">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          العنوان
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          الناشر
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          التاريخ
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          الإجراءات
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      <AnimatePresence>
+                        {communityBlogs.map((blog) => (
+                          <motion.tr
+                            key={blog._id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, x: -50 }}
+                            transition={{ duration: 0.3 }}
+                            className="hover:bg-purple-50/50 transition-colors"
+                          >
+                            <td className="px-6 py-4">
+                              <div className="text-sm font-medium text-gray-900 line-clamp-1">
+                                {blog.title}
+                              </div>
+                              <div className="text-sm text-gray-500 mt-1 flex flex-wrap gap-2">
+                                <span className="px-2 py-0.5 bg-gray-100 rounded-full text-xs">
+                                  {blog.category || "بدون تصنيف"}
+                                </span>
+                                <span className="flex items-center gap-1 text-xs">
+                                  <FiEye className="text-blue-500" />
+                                  {blog.views || 0} مشاهدة
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {blog.author?.email || blog.author || "غير معروف"}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {new Date(blog.createdAt).toLocaleDateString(
+                                "ar-EG"
                               )}
-                            </motion.button>
-                            {/* Delete Button */}
-                            <motion.button
-                              whileHover={{
-                                scale: 1.1,
-                                backgroundColor: "rgba(220, 38, 38, 0.1)",
-                              }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => deleteBlog(blog._id)}
-                              disabled={loading.actions}
-                              className="p-2 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
-                              title="حذف المقال"
-                            >
-                              {loading.actions ? (
-                                <motion.div
-                                  animate={{ rotate: 360 }}
-                                  transition={{
-                                    duration: 1,
-                                    repeat: Infinity,
-                                    ease: "linear",
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <div className="flex justify-end gap-2">
+                                {/* Verify Button */}
+                                <motion.button
+                                  whileHover={{
+                                    scale: 1.1,
+                                    backgroundColor: "rgba(34,197,94,0.1)",
                                   }}
-                                  className="w-4 h-4 border-2 border-current border-t-transparent rounded-full"
-                                />
-                              ) : (
-                                <FiTrash2 className="text-lg" />
-                              )}
-                            </motion.button>
-                          </div>
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </AnimatePresence>
-                </tbody>
-              </table>
-            </div>
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => toggleVerifyBlog(blog._id)}
+                                  disabled={
+                                    loading.actions || verifying === blog._id
+                                  }
+                                  className={`p-2 rounded-lg ${
+                                    blog.verified
+                                      ? "text-green-600 hover:bg-green-50"
+                                      : "text-gray-400 hover:bg-gray-100"
+                                  } transition-colors`}
+                                  title={
+                                    blog.verified
+                                      ? "تم التحقق"
+                                      : "تحقق من المقال"
+                                  }
+                                >
+                                  {verifying === blog._id ? (
+                                    <motion.div
+                                      animate={{ rotate: 360 }}
+                                      transition={{
+                                        duration: 1,
+                                        repeat: Infinity,
+                                        ease: "linear",
+                                      }}
+                                      className="w-4 h-4 border-2 border-current border-t-transparent rounded-full"
+                                    />
+                                  ) : (
+                                    <FiCheckCircle className="text-lg" />
+                                  )}
+                                </motion.button>
+                                {/* Delete Button */}
+                                <motion.button
+                                  whileHover={{
+                                    scale: 1.1,
+                                    backgroundColor: "rgba(220, 38, 38, 0.1)",
+                                  }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => deleteBlog(blog._id)}
+                                  disabled={loading.actions}
+                                  className="p-2 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                                  title="حذف المقال"
+                                >
+                                  <FiTrash2 className="text-lg" />
+                                </motion.button>
+                              </div>
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </AnimatePresence>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))
           )}
         </motion.section>
       </div>

@@ -2,13 +2,18 @@ import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
-import { FiClock, FiUser, FiArrowLeft, FiBookOpen } from "react-icons/fi";
+import {
+  FiClock,
+  FiUser,
+  FiArrowLeft,
+  FiBookOpen,
+  FiCheckCircle,
+} from "react-icons/fi";
+
 import { FaRegNewspaper } from "react-icons/fa";
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { MdAdminPanelSettings } from "react-icons/md";
-
-import md5 from "md5";
 
 const ArticlePage = () => {
   const { slug } = useParams();
@@ -162,9 +167,16 @@ const ArticlePage = () => {
         >
           {article.category}
         </motion.span>
-        <h1 className="text-3xl md:text-4xl font-bold text-green-800 my-3 leading-tight">
+        <h1 className="text-3xl md:text-4xl font-bold text-green-800 my-3 leading-tight flex items-center gap-2 flex-wrap">
           {article.title}
+          {article.verified && (
+            <FiCheckCircle
+              className="inline text-green-600"
+              title="مقال موثوق"
+            />
+          )}
         </h1>
+
         <div className="flex items-center flex-wrap gap-4 text-gray-600 mt-4">
           <div className="flex items-center">
             <FiUser className="ml-1 text-green-600" />

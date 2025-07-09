@@ -33,6 +33,18 @@ const SubmitBlog = () => {
     "المقالات",
     "أخرى",
   ];
+  const community = [
+    "إحيا",
+    "نور",
+    "أسرة",
+    "أبها",
+    "فرح",
+    "أسوة",
+    "فوز",
+    "حكمة",
+    "سعادة",
+    "الصف الأول",
+  ];
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -262,7 +274,7 @@ const SubmitBlog = () => {
           {/* Community Selector */}
           <div>
             <label className="block text-lg font-medium text-gray-800 mb-3">
-              المجتمع / الفصل *
+              المجتمع / الصف *
             </label>
             <select
               name="community"
@@ -273,16 +285,11 @@ const SubmitBlog = () => {
               className="w-full px-5 py-3 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-400 transition bg-white"
             >
               <option value="">اختر المجتمع / الصف</option>
-              <option value="Urdu">إحيا</option>
-              <option value="Arabic">نور</option>
-              <option value="English">أسرة</option>
-              <option value="Media">أبها</option>
-              <option value="Class 1">فرح</option>
-              <option value="Class 2">أسوة</option>
-              <option value="General">فوز</option>
-              <option value="General">حكمة</option>
-              <option value="General">سعادة</option>
-              <option value="General">الصف الأول</option>
+              {community.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
             </select>
           </div>
 

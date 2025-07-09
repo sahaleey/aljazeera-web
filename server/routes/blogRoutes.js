@@ -39,10 +39,18 @@ router.get("/:slug", async (req, res) => {
 
 // ✅ Submit a new blog
 router.post("/", async (req, res) => {
-  const { title, author, content, email, category, photoUrl, community } =
-    req.body;
+  const {
+    title,
+    author,
+    content,
+    email,
+    category,
+    photoUrl,
 
-  if (!title || !author || !content || !email || !category) {
+    community,
+  } = req.body;
+
+  if (!title || !author || !content || !email || !category || !community) {
     return res.status(400).json({ error: "All fields are required" });
   }
 
@@ -73,6 +81,7 @@ router.post("/", async (req, res) => {
       photoUrl: photoUrl || "",
       email,
       category,
+      verified: false,
       likes: [],
       dislikes: [],
       views: 0,

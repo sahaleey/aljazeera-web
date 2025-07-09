@@ -14,6 +14,7 @@ import Login from "./components/Login";
 import Dashboard from "./pages/Dashboard";
 import AuthenticatorDashboard from "./pages/AuthenticatorDashboard";
 import Signup from "./components/Signup";
+import CommunityPoints from "./pages/CommunityPointsPage";
 
 function App() {
   const [userEmail, setUserEmail] = useState("");
@@ -41,6 +42,10 @@ function App() {
         <Route path="/blogs" element={<BlogList userEmail={userEmail} />} />
         <Route path="/submit" element={<SubmitBlog userEmail={userEmail} />} />
         <Route path="admin-dashboard" element={<AuthenticatorDashboard />} />
+        <Route
+          path="/community-points"
+          element={<CommunityPoints userEmail={userEmail} />}
+        />
         <Route
           path="/blog/:slug"
           element={<ArticlePage userEmail={userEmail} />}

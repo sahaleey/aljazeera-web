@@ -38,6 +38,7 @@ const Navbar = () => {
   const navItems = [
     { path: "/home", label: "الرئيسية" },
     { path: "/blogs", label: "المقالات" },
+    { path: "/community-points", label: "نقاط المجتمعات" },
     {
       path: "/submit",
       label: "أضف مقالتك",

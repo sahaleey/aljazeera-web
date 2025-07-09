@@ -272,14 +272,17 @@ const SubmitBlog = () => {
               disabled={loading}
               className="w-full px-5 py-3 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-400 transition bg-white"
             >
-              <option value="">اختر المجتمع / الفصل</option>
-              <option value="Urdu">جناح الأردية</option>
-              <option value="Arabic">جناح العربية</option>
-              <option value="English">جناح الإنجليزية</option>
-              <option value="Media">جناح الإعلام</option>
-              <option value="Class 1">الفصل 1</option>
-              <option value="Class 2">الفصل 2</option>
-              <option value="General">عام / غير مصنف</option>
+              <option value="">اختر المجتمع / الصف</option>
+              <option value="Urdu">إحيا</option>
+              <option value="Arabic">نور</option>
+              <option value="English">أسرة</option>
+              <option value="Media">أبها</option>
+              <option value="Class 1">فرح</option>
+              <option value="Class 2">أسوة</option>
+              <option value="General">فوز</option>
+              <option value="General">حكمة</option>
+              <option value="General">سعادة</option>
+              <option value="General">الصف الأول</option>
             </select>
           </div>
 

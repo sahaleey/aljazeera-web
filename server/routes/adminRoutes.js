@@ -164,7 +164,7 @@ router.get("/blogs", verifyUser, verifyAdmin, async (req, res) => {
  * ✅ Verify a blog (Admin only)
  */
 // ✅ Toggle Blog Verification (Admin Only)
-router.put("/verify/:id", verifyAdmin, async (req, res) => {
+router.put("/blogs/verify/:id", verifyAdmin, async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
     if (!blog)

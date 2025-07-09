@@ -115,7 +115,7 @@ const AuthenticatorDashboard = () => {
     try {
       const token = await user.getIdToken();
       const res = await axios.put(
-        `https://aljazeera-web.onrender.com/api/blogs/verify/${id}`,
+        `https://aljazeera-web.onrender.com/api/users/blogs/verify/${id}`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },

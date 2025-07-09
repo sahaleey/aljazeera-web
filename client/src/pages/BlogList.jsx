@@ -15,6 +15,7 @@ const BlogList = ({ userEmail }) => {
   const [articles, setArticles] = useState([]);
   const [activeCategory, setActiveCategory] = useState("الكل");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isBlocked, setIsBlocked] = useState(false);
   const navigate = useNavigate();
 
   const categories = [
@@ -29,23 +30,19 @@ const BlogList = ({ userEmail }) => {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        // Step 1: Check if the user is blocked
         if (userEmail) {
           const userRes = await axios.get(
             `https://aljazeera-web.onrender.com/api/users/status/${userEmail}`
           );
-
           const isBlocked = userRes.data.blocked;
           const isAdmin = userEmail === "ajua46244@gmail.com";
 
           if (isBlocked && !isAdmin) {
-            toast.error("❌ تم حظرك من تصفح المقالات");
-            navigate("/home");
+            setIsBlocked(true);
             return;
           }
         }
 
-        // Step 2: Fetch all blog articles
         const blogRes = await axios.get(
           "https://aljazeera-web.onrender.com/api/blogs"
         );
@@ -60,7 +57,7 @@ const BlogList = ({ userEmail }) => {
     };
 
     fetchArticles();
-  }, [userEmail, navigate]);
+  }, [userEmail]);
 
   const handleLike = async (slug) => {
     if (!userEmail) return navigate("/login");
@@ -69,16 +66,11 @@ const BlogList = ({ userEmail }) => {
         `https://aljazeera-web.onrender.com/api/blogs/like/${slug}`,
         { email: userEmail }
       );
-
       setArticles((prev) =>
-        prev.map((article) =>
-          article.slug === slug
-            ? {
-                ...article,
-                likes: res.data.likes,
-                dislikes: res.data.dislikes,
-              }
-            : article
+        prev.map((a) =>
+          a.slug === slug
+            ? { ...a, likes: res.data.likes, dislikes: res.data.dislikes }
+            : a
         )
       );
     } catch (err) {
@@ -93,16 +85,11 @@ const BlogList = ({ userEmail }) => {
         `https://aljazeera-web.onrender.com/api/blogs/dislike/${slug}`,
         { email: userEmail }
       );
-
       setArticles((prev) =>
-        prev.map((article) =>
-          article.slug === slug
-            ? {
-                ...article,
-                likes: res.data.likes,
-                dislikes: res.data.dislikes,
-              }
-            : article
+        prev.map((a) =>
+          a.slug === slug
+            ? { ...a, likes: res.data.likes, dislikes: res.data.dislikes }
+            : a
         )
       );
     } catch (err) {
@@ -117,13 +104,8 @@ const BlogList = ({ userEmail }) => {
         `https://aljazeera-web.onrender.com/api/blogs/view/${slug}`,
         { email: userEmail }
       );
-
       setArticles((prev) =>
-        prev.map((article) =>
-          article.slug === slug
-            ? { ...article, views: res.data.views }
-            : article
-        )
+        prev.map((a) => (a.slug === slug ? { ...a, views: res.data.views } : a))
       );
     } catch (err) {
       console.error("Error updating view count:", err);
@@ -139,6 +121,27 @@ const BlogList = ({ userEmail }) => {
     return matchesCategory && matchesSearch;
   });
 
+  if (isBlocked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-red-50 text-center px-4">
+        <div className="bg-white p-8 rounded-xl shadow-lg border border-red-200 max-w-lg">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">🚫 تم الحظر</h2>
+          <p className="text-gray-600 mb-6">
+            لقد تم حظرك من استخدام هذا القسم. إذا كنت تعتقد أن هذا تم عن طريق
+            الخطأ، يرجى التواصل مع الإدارة.
+          </p>
+          <button
+            onClick={() => navigate("/home")}
+            className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+          >
+            العودة إلى الصفحة الرئيسية
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Return your original JSX if not blocked...
   return (
     <motion.div
       initial={{ opacity: 0 }}

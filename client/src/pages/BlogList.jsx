@@ -9,6 +9,7 @@ import {
   FiSearch,
   FiClock,
 } from "react-icons/fi";
+import { toast } from "react-toastify";
 
 const BlogList = ({ userEmail }) => {
   const [articles, setArticles] = useState([]);
@@ -28,16 +29,38 @@ const BlogList = ({ userEmail }) => {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const res = await axios.get(
+        // Step 1: Check if the user is blocked
+        if (userEmail) {
+          const userRes = await axios.get(
+            `https://aljazeera-web.onrender.com/api/users/status/${userEmail}`
+          );
+
+          const isBlocked = userRes.data.blocked;
+          const isAdmin = userEmail === "ajua46244@gmail.com";
+
+          if (isBlocked && !isAdmin) {
+            toast.error("❌ تم حظرك من تصفح المقالات");
+            navigate("/home");
+            return;
+          }
+        }
+
+        // Step 2: Fetch all blog articles
+        const blogRes = await axios.get(
           "https://aljazeera-web.onrender.com/api/blogs"
         );
-        setArticles(res.data.reverse());
+        setArticles(blogRes.data.reverse());
       } catch (err) {
-        console.error("Error fetching articles:", err);
+        console.error(
+          "❌ Error fetching articles or checking user status:",
+          err
+        );
+        toast.error("حدث خطأ أثناء تحميل المقالات");
       }
     };
+
     fetchArticles();
-  }, []);
+  }, [userEmail, navigate]);
 
   const handleLike = async (slug) => {
     if (!userEmail) return navigate("/login");

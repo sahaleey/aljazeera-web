@@ -106,6 +106,17 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to delete blog" });
   }
 });
+// ✅ Get only verified blogs
+router.get("/verified", async (req, res) => {
+  try {
+    const verifiedBlogs = await Blog.find({ verified: true }).sort({
+      createdAt: -1,
+    });
+    res.json(verifiedBlogs);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch verified blogs" });
+  }
+});
 
 // ✅ Increment views (once per user)
 router.patch("/view/:slug", async (req, res) => {

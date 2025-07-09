@@ -3,7 +3,7 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiChevronDown, FiChevronUp, FiCheckCircle } from "react-icons/fi";
 
-// Arabic names for each community
+// Arabic display names for communities
 const communityNames = {
   ihya: "إحياء",
   nour: "نور",
@@ -26,15 +26,18 @@ const CommunityPoints = () => {
     const fetchVerifiedBlogs = async () => {
       try {
         const res = await axios.get(
-          "https://aljazeera-web.onrender.com/api/blogs"
+          "https://aljazeera-web.onrender.com/api/blogs/verified"
         );
 
         const verifiedBlogs = res.data.filter(
           (blog) =>
-            blog.verified && communityNames[blog.community?.toLowerCase()]
+            blog.verified &&
+            blog.community &&
+            Object.keys(communityNames).includes(blog.community.toLowerCase())
         );
 
         const grouped = {};
+
         verifiedBlogs.forEach((blog) => {
           const key = blog.community.toLowerCase();
           if (!grouped[key]) grouped[key] = [];

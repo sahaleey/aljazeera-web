@@ -8,7 +8,12 @@ const adminRoutes = require("./routes/adminRoutes");
 const userRoutes = require("./routes/userRoutes");
 
 // Debugging line to check the URI
-
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://aljazeera-web.vercel.app"], // add both dev + prod origins
+    credentials: true, // this is needed if you're sending cookies or auth headers
+  })
+);
 const app = express();
 const PORT = process.env.PORT || 5000;
 app.use(cors());

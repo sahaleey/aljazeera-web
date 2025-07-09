@@ -85,8 +85,9 @@ const CommunityPoints = () => {
       const grouped = {};
       if (res.data && typeof res.data === "object") {
         Object.entries(res.data).forEach(([community, blogs]) => {
-          const matchedKey = Object.entries(arabicToKeyMap).find(([label]) =>
-            community.trim().startsWith(label)
+          // Strict Arabic label matching
+          const matchedKey = Object.entries(arabicToKeyMap).find(
+            ([label]) => label.trim() === community.trim()
           );
           const key = matchedKey
             ? matchedKey[1]
@@ -99,11 +100,11 @@ const CommunityPoints = () => {
             return;
           }
 
-          if (typeof blogs === "number") {
-            grouped[key] = {
-              totalPoints: blogs,
-              blogs: [],
-            };
+          if (Array.isArray(blogs)) {
+            grouped[key] = blogs.map((blog) => ({
+              ...blog,
+              earnedPoints: calculatePoints(blog),
+            }));
           } else {
             console.warn(
               `Invalid blogs format for community: ${community}`,
@@ -219,14 +220,18 @@ const CommunityPoints = () => {
                     <p className="text-sm text-gray-500 mt-1">
                       مجموع النقاط:{" "}
                       <span className="text-green-600 font-semibold">
-                        {communityData[key]
+                        {Array.isArray(communityData[key])
                           ? communityData[key].reduce(
                               (sum, b) => sum + b.earnedPoints,
                               0
                             )
                           : 0}
                       </span>{" "}
-                      ({communityData[key]?.length || 0} مقالة)
+                      (
+                      {Array.isArray(communityData[key])
+                        ? communityData[key].length
+                        : 0}{" "}
+                      مقالة)
                     </p>
                   </div>
                   <div className="text-gray-400">

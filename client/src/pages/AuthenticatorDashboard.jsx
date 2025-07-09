@@ -28,10 +28,13 @@ const AuthenticatorDashboard = () => {
   const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [users, setUsers] = useState([]);
   const [blogs, setBlogs] = useState([]);
+  const [communityPoints, setCommunityPoints] = useState({});
+
   const [loading, setLoading] = useState({
     users: false,
     blogs: false,
     actions: false,
+    points: false,
   });
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -97,6 +100,7 @@ const AuthenticatorDashboard = () => {
 
         await fetchUsers(token);
         await fetchBlogs(token);
+        await fetchCommunityPoints(token);
       } catch (err) {
         console.error("[AuthDash] Error during admin flow:", err);
         notify.error("حدث خطأ أثناء التحقق من البيانات");
@@ -106,6 +110,27 @@ const AuthenticatorDashboard = () => {
 
     return unsubscribe;
   }, []);
+
+  const fetchCommunityPoints = async (token) => {
+    setLoading((prev) => ({ ...prev, points: true }));
+    try {
+      const res = await axios.get(
+        "https://aljazeera-web.onrender.com/api/blogs/points",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setCommunityPoints(res.data);
+      notify.info("✅ تم تحميل نقاط المجتمعات");
+    } catch (err) {
+      console.error("❌ Error fetching points:", err);
+      notify.error("فشل تحميل نقاط المجتمعات");
+    } finally {
+      setLoading((prev) => ({ ...prev, points: false }));
+    }
+  };
 
   //to verify or unverify a blog
 
@@ -127,6 +152,7 @@ const AuthenticatorDashboard = () => {
           : "❎ تم إزالة التحقق من المقال"
       );
       await fetchBlogs(token);
+      await fetchCommunityPoints(token);
     } catch (err) {
       console.error("❌ Error verifying blog:", err);
       notify.error("حدث خطأ أثناء التحقق من المقال");
@@ -638,6 +664,52 @@ const AuthenticatorDashboard = () => {
                   </AnimatePresence>
                 </tbody>
               </table>
+            </div>
+          )}
+        </motion.section>
+
+        {/* Community Points Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200 mt-6"
+        >
+          <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-yellow-50 to-white">
+            <div className="flex items-center justify-between">
+              <motion.h2
+                whileHover={{ scale: 1.01 }}
+                className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-3"
+              >
+                <div className="p-2 bg-yellow-100 rounded-lg text-yellow-600">
+                  🏆
+                </div>
+                <span>نقاط المجتمعات</span>
+              </motion.h2>
+            </div>
+          </div>
+
+          {loading.points ? (
+            <div className="p-6 text-center text-gray-500">
+              يتم تحميل النقاط...
+            </div>
+          ) : Object.keys(communityPoints).length === 0 ? (
+            <div className="p-6 text-center text-gray-500">
+              لا توجد نقاط بعد
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-6">
+              {Object.entries(communityPoints).map(([community, points]) => (
+                <div
+                  key={community}
+                  className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg shadow-sm"
+                >
+                  <h4 className="text-lg font-semibold text-gray-700 capitalize">
+                    {community}
+                  </h4>
+                  <p className="text-sm text-gray-600">عدد النقاط: {points}</p>
+                </div>
+              ))}
             </div>
           )}
         </motion.section>

@@ -47,17 +47,12 @@ router.get("/points", async (req, res) => {
 
     verifiedBlogs.forEach((blog) => {
       const key = blog.community.toLowerCase();
-      if (!communityPoints[key]) communityPoints[key] = 0;
+      if (!communityPoints[key]) communityPoints[key] = [];
 
-      let points = 1;
-      if (blog.likes?.length >= 10) points += 1;
-      if (blog.likes?.length >= 25) points += 1;
-      if (blog.views >= 50) points += 1;
-
-      communityPoints[key] += points;
+      communityPoints[key].push(blog);
     });
 
-    res.json(communityPoints);
+    res.json(communityPoints); // now it's grouped blogs, not total points
   } catch (err) {
     res.status(500).json({ error: "Failed to calculate community points" });
   }

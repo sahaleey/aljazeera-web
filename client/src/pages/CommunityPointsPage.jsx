@@ -1,9 +1,18 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiChevronDown, FiChevronUp, FiCheckCircle } from "react-icons/fi";
+import {
+  FiChevronDown,
+  FiChevronUp,
+  FiCheckCircle,
+  FiAlertCircle,
+  FiRefreshCw,
+} from "react-icons/fi";
+import { auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-// Arabic community labels
 const communityNames = {
   ihya: "إحياء",
   nour: "نور",
@@ -17,52 +26,144 @@ const communityNames = {
   "class 1": "الصف الأول",
 };
 
+const arabicToKeyMap = Object.entries(communityNames).reduce(
+  (acc, [key, arabic]) => {
+    acc[arabic] = key;
+    return acc;
+  },
+  {}
+);
+
 const CommunityPoints = () => {
+  const [user, setUser] = useState(null);
+  const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [communityData, setCommunityData] = useState({});
   const [expandedCommunity, setExpandedCommunity] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const adminEmails = ["ajua46244@gmail.com"];
 
-  // Add this function inside your component (or outside if you prefer)
-  const calculatePoints = (blogs) => {
-    return blogs.reduce((total, blog) => {
-      let points = 1;
-      const likes = blog.likes?.length || 0;
-      const views = blog.views || 0;
-      if (likes >= 10) points += 1;
-      if (likes >= 25) points += 1;
-      if (views >= 50) points += 1;
-      return total + points;
-    }, 0);
+  const notify = {
+    success: (message) =>
+      toast.success(message, {
+        position: "top-right",
+        icon: <FiCheckCircle className="text-xl" />,
+      }),
+    error: (message) =>
+      toast.error(message, {
+        position: "top-right",
+        icon: <FiAlertCircle className="text-xl" />,
+      }),
+    info: (message) =>
+      toast.info(message, {
+        position: "top-right",
+      }),
+  };
+
+  const calculatePoints = (blog) => {
+    let points = 1;
+    const likes = blog.likes?.length || 0;
+    const views = blog.views || 0;
+    if (likes >= 10) points += 1;
+    if (likes >= 25) points += 1;
+    if (views >= 50) points += 1;
+    return points;
+  };
+
+  const fetchCommunityPoints = async (token) => {
+    try {
+      setLoading(true);
+      const res = await axios.get(
+        "https://aljazeera-web.onrender.com/api/blogs/points",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const grouped = {};
+      if (res.data && typeof res.data === "object") {
+        Object.entries(res.data).forEach(([community, blogs]) => {
+          const matchedKey = Object.entries(arabicToKeyMap).find(([label]) =>
+            community.trim().startsWith(label)
+          );
+          const key = matchedKey
+            ? matchedKey[1]
+            : community.trim().toLowerCase();
+
+          if (!communityNames[key]) {
+            console.warn(
+              `❌ Invalid community label not found in mapping: ${community}`
+            );
+            return;
+          }
+
+          if (typeof blogs === "number") {
+            grouped[key] = {
+              totalPoints: blogs,
+              blogs: [],
+            };
+          } else {
+            console.warn(
+              `Invalid blogs format for community: ${community}`,
+              blogs
+            );
+          }
+        });
+      } else {
+        console.error("Unexpected response format:", res.data);
+        notify.error("تنسيق استجابة غير متوقع من الخادم");
+        return;
+      }
+
+      setCommunityData(grouped);
+      notify.success("✅ تم تحميل النقاط بنجاح");
+    } catch (err) {
+      console.error("❌ Failed to fetch community points:", err);
+      notify.error("فشل تحميل نقاط المجتمعات");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   };
 
   useEffect(() => {
-    const fetchVerifiedBlogs = async () => {
-      try {
-        const res = await axios.get(
-          "https://aljazeera-web.onrender.com/api/blogs/verified"
-        );
-
-        const verifiedBlogs = res.data.filter(
-          (blog) => blog.verified && blog.community
-        );
-
-        const grouped = {};
-        verifiedBlogs.forEach((blog) => {
-          const key = blog.community.toLowerCase();
-          if (!grouped[key]) grouped[key] = [];
-          grouped[key].push(blog);
-        });
-
-        setCommunityData(grouped);
-      } catch (err) {
-        console.error("❌ Failed to fetch verified blogs:", err);
-      } finally {
-        setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!currentUser) {
+        notify.error("يجب تسجيل الدخول أولاً");
+        return;
       }
-    };
 
-    fetchVerifiedBlogs();
+      if (!adminEmails.includes(currentUser.email)) {
+        notify.error("🚫 ليس لديك صلاحية الوصول");
+        return;
+      }
+
+      setUser(currentUser);
+      setCheckingAdmin(false);
+
+      try {
+        const token = await currentUser.getIdToken();
+        await fetchCommunityPoints(token);
+      } catch (err) {
+        console.error("❌ Error in auth state change:", err);
+      }
+    });
+
+    return unsubscribe;
   }, []);
+
+  const handleRefresh = async () => {
+    if (!user) return;
+    setRefreshing(true);
+    try {
+      const token = await user.getIdToken();
+      await fetchCommunityPoints(token);
+    } catch (err) {
+      console.error("❌ Error refreshing data:", err);
+    }
+  };
 
   const toggleCommunity = (key) => {
     setExpandedCommunity((prev) => (prev === key ? null : key));
@@ -70,12 +171,31 @@ const CommunityPoints = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-blue-50 p-6">
+      <ToastContainer />
       <div className="max-w-5xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold text-center text-blue-700 mb-6">
-          🏆 نقاط المجتمعات
-        </h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-blue-700">
+            🏆 نقاط المجتمعات
+          </h1>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing || loading}
+            className="flex items-center gap-2 bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded-lg transition-colors"
+          >
+            {refreshing ? (
+              <FiRefreshCw className="animate-spin" />
+            ) : (
+              <FiRefreshCw />
+            )}
+            تحديث البيانات
+          </button>
+        </div>
 
-        {loading ? (
+        {checkingAdmin ? (
+          <div className="text-center text-gray-500">
+            جاري التحقق من الصلاحيات...
+          </div>
+        ) : loading ? (
           <div className="text-center text-gray-500">جاري تحميل النقاط...</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -100,7 +220,10 @@ const CommunityPoints = () => {
                       مجموع النقاط:{" "}
                       <span className="text-green-600 font-semibold">
                         {communityData[key]
-                          ? calculatePoints(communityData[key])
+                          ? communityData[key].reduce(
+                              (sum, b) => sum + b.earnedPoints,
+                              0
+                            )
                           : 0}
                       </span>{" "}
                       ({communityData[key]?.length || 0} مقالة)
@@ -128,7 +251,7 @@ const CommunityPoints = () => {
                           {communityData[key].map((blog) => (
                             <li
                               key={blog._id}
-                              className="bg-blue-50 p-3 rounded-lg border border-blue-100 flex items-center justify-between"
+                              className="bg-blue-50 p-3 rounded-lg border border-blue-100 flex justify-between items-start gap-4"
                             >
                               <div>
                                 <h4 className="text-sm font-semibold text-blue-700 line-clamp-1">
@@ -139,8 +262,15 @@ const CommunityPoints = () => {
                                     "ar-EG"
                                   )}
                                 </p>
+                                <p className="text-xs text-gray-400 mt-1">
+                                  ❤️ {blog.likes?.length || 0} إعجاب - 👁️{" "}
+                                  {blog.views || 0} مشاهدة
+                                </p>
                               </div>
-                              <FiCheckCircle className="text-green-500 text-xl" />
+                              <div className="text-green-600 text-sm font-semibold flex items-center gap-1">
+                                <FiCheckCircle className="text-lg" />
+                                {blog.earnedPoints} نقطة
+                              </div>
                             </li>
                           ))}
                         </ul>

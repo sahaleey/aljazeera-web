@@ -16,6 +16,8 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
+import { AiFillLike } from "react-icons/ai";
+import { FaEye } from "react-icons/fa";
 
 const communityNames = {
   ihya: "إحيا",
@@ -670,10 +672,12 @@ const CommunityPoints = () => {
                                 </p>
                                 <div className="flex items-center gap-3 mt-2">
                                   <span className="text-xs text-pink-500 flex items-center gap-1">
-                                    ❤️ {blog.likes?.length || 0}
+                                    <AiFillLike />
+                                    {blog.likes?.length || 0}
                                   </span>
                                   <span className="text-xs text-blue-500 flex items-center gap-1">
-                                    👁️ {blog.views || 0}
+                                    <FaEye />
+                                    {blog.views || 0}
                                   </span>
                                 </div>
                               </div>

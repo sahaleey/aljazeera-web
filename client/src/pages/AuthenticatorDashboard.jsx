@@ -132,17 +132,16 @@ const AuthenticatorDashboard = () => {
     }
   };
   const calculatePoints = (blogs) => {
-  return blogs.reduce((sum, blog) => {
-    let points = 1;
-    const likes = blog.likes?.length || 0;
-    const views = blog.views || 0;
-    if (likes >= 10) points += 1;
-    if (likes >= 25) points += 1;
-    if (views >= 50) points += 1;
-    return sum + points;
-  }, 0);
-};
-
+    return blogs.reduce((sum, blog) => {
+      let points = 1;
+      const likes = blog.likes?.length || 0;
+      const views = blog.views || 0;
+      if (likes >= 10) points += 1;
+      if (likes >= 25) points += 1;
+      if (views >= 50) points += 1;
+      return sum + points;
+    }, 0);
+  };
 
   //to verify or unverify a blog
 
@@ -684,48 +683,189 @@ const AuthenticatorDashboard = () => {
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200 mt-6"
+          transition={{ delay: 0.35, type: "spring", stiffness: 100 }}
+          className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden border border-white/20 mt-6"
         >
-          <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-yellow-50 to-white">
+          {/* Header with gradient and animated icon */}
+          <div className="p-6 border-b border-white/20 bg-gradient-to-r from-yellow-400/10 via-yellow-100/50 to-white">
             <div className="flex items-center justify-between">
               <motion.h2
-                whileHover={{ scale: 1.01 }}
-                className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-3"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-4"
               >
-                <div className="p-2 bg-yellow-100 rounded-lg text-yellow-600">
+                <motion.div
+                  animate={{
+                    rotate: [0, 10, -10, 0],
+                    scale: [1, 1.1, 1],
+                  }}
+                  transition={{
+                    repeat: Infinity,
+                    repeatType: "mirror",
+                    duration: 2,
+                    ease: "easeInOut",
+                  }}
+                  className="p-3 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl text-white shadow-lg"
+                >
                   🏆
-                </div>
-                <span>نقاط المجتمعات</span>
+                </motion.div>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-600 to-amber-600">
+                  نقاط المجتمعات
+                </span>
               </motion.h2>
             </div>
           </div>
 
+          {/* Content Area */}
           {loading.points ? (
-            <div className="p-6 text-center text-gray-500">
-              يتم تحميل النقاط...
-            </div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="p-8 text-center"
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                className="inline-block mb-4 text-yellow-500"
+              >
+                <FiRefreshCw className="text-3xl" />
+              </motion.div>
+              <p className="text-gray-500 animate-pulse">يتم تحميل النقاط...</p>
+            </motion.div>
           ) : Object.keys(communityPoints).length === 0 ? (
-            <div className="p-6 text-center text-gray-500">
-              لا توجد نقاط بعد
-            </div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="p-8 text-center"
+            >
+              <div className="inline-block p-4 mb-3 bg-yellow-100/50 rounded-full">
+                <FiAlertCircle className="text-2xl text-yellow-600" />
+              </div>
+              <p className="text-gray-500">لا توجد نقاط بعد</p>
+            </motion.div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-6">
-             {Object.entries(communityPoints).map(([community, blogs]) => (
-  <div
-    key={community}
-    className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg shadow-sm"
-  >
-    <h4 className="text-lg font-semibold text-gray-700 capitalize">
-      {community}
-    </h4>
-    <p className="text-sm text-gray-600">
-      عدد النقاط: {Array.isArray(blogs) ? calculatePoints(blogs) : 0}
-    </p>
-  </div>
-))}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ staggerChildren: 0.1 }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 p-6"
+            >
+              {Object.entries(communityPoints).map(
+                ([community, blogs], index) => (
+                  <motion.div
+                    key={community}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{
+                      y: -5,
+                      boxShadow: "0 10px 25px -5px rgba(234, 179, 8, 0.2)",
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`relative overflow-hidden rounded-xl shadow-md ${
+                      index % 3 === 0
+                        ? "bg-gradient-to-br from-yellow-50 to-amber-50 border border-amber-100"
+                        : index % 3 === 1
+                        ? "bg-gradient-to-br from-amber-50 to-white border border-amber-50"
+                        : "bg-gradient-to-br from-white to-yellow-50 border border-yellow-100"
+                    }`}
+                  >
+                    {/* Animated background element */}
+                    <motion.div
+                      className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-amber-400"
+                      initial={{ width: 0 }}
+                      animate={{ width: "100%" }}
+                      transition={{ duration: 0.8, delay: index * 0.15 }}
+                    />
 
-            </div>
+                    <div className="p-5">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <motion.h4
+                            whileHover={{ x: 3 }}
+                            className="text-lg font-bold text-gray-800 capitalize flex items-center gap-2"
+                          >
+                            <span
+                              className={`p-1 rounded-full ${
+                                index % 3 === 0
+                                  ? "bg-yellow-100 text-yellow-600"
+                                  : index % 3 === 1
+                                  ? "bg-amber-100 text-amber-600"
+                                  : "bg-orange-100 text-orange-600"
+                              }`}
+                            >
+                              {index + 1}
+                            </span>
+                            {community}
+                          </motion.h4>
+                          <p className="text-sm text-gray-600 mt-1">
+                            عدد المقالات:{" "}
+                            {Array.isArray(blogs) ? blogs.length : 0}
+                          </p>
+                        </div>
+                        <motion.div
+                          whileHover={{ scale: 1.2 }}
+                          className={`text-2xl font-bold ${
+                            index % 3 === 0
+                              ? "text-yellow-600"
+                              : index % 3 === 1
+                              ? "text-amber-600"
+                              : "text-orange-600"
+                          }`}
+                        >
+                          {Array.isArray(blogs) ? calculatePoints(blogs) : 0}
+                        </motion.div>
+                      </div>
+
+                      {/* Animated progress bar */}
+                      <div className="mt-4">
+                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{
+                              width: `${Math.min(
+                                ((Array.isArray(blogs)
+                                  ? calculatePoints(blogs)
+                                  : 0) /
+                                  (Math.max(
+                                    ...Object.values(communityPoints).map((b) =>
+                                      Array.isArray(b) ? calculatePoints(b) : 0
+                                    )
+                                  ) || 1)) *
+                                  100,
+                                100
+                              )}%`,
+                            }}
+                            transition={{ duration: 1, delay: index * 0.1 }}
+                            className={`h-full ${
+                              index % 3 === 0
+                                ? "bg-gradient-to-r from-yellow-400 to-yellow-500"
+                                : index % 3 === 1
+                                ? "bg-gradient-to-r from-amber-400 to-amber-500"
+                                : "bg-gradient-to-r from-orange-400 to-orange-500"
+                            }`}
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1 text-left">
+                          {Math.round(
+                            ((Array.isArray(blogs)
+                              ? calculatePoints(blogs)
+                              : 0) /
+                              (Math.max(
+                                ...Object.values(communityPoints).map((b) =>
+                                  Array.isArray(b) ? calculatePoints(b) : 0
+                                )
+                              ) || 1)) *
+                              100
+                          )}
+                          % من أعلى نقاط
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )
+              )}
+            </motion.div>
           )}
         </motion.section>
 
@@ -835,9 +975,8 @@ const AuthenticatorDashboard = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {typeof blog.author === "object"
-  ? blog.author.email || "غير معروف"
-  : blog.author || "غير معروف"}
-
+                                ? blog.author.email || "غير معروف"
+                                : blog.author || "غير معروف"}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {new Date(blog.createdAt).toLocaleDateString(

@@ -131,6 +131,18 @@ const AuthenticatorDashboard = () => {
       setLoading((prev) => ({ ...prev, points: false }));
     }
   };
+  const calculatePoints = (blogs) => {
+  return blogs.reduce((sum, blog) => {
+    let points = 1;
+    const likes = blog.likes?.length || 0;
+    const views = blog.views || 0;
+    if (likes >= 10) points += 1;
+    if (likes >= 25) points += 1;
+    if (views >= 50) points += 1;
+    return sum + points;
+  }, 0);
+};
+
 
   //to verify or unverify a blog
 
@@ -699,17 +711,20 @@ const AuthenticatorDashboard = () => {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-6">
-              {Object.entries(communityPoints).map(([community, points]) => (
-                <div
-                  key={community}
-                  className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg shadow-sm"
-                >
-                  <h4 className="text-lg font-semibold text-gray-700 capitalize">
-                    {community}
-                  </h4>
-                  <p className="text-sm text-gray-600">عدد النقاط: {points}</p>
-                </div>
-              ))}
+             {Object.entries(communityPoints).map(([community, blogs]) => (
+  <div
+    key={community}
+    className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg shadow-sm"
+  >
+    <h4 className="text-lg font-semibold text-gray-700 capitalize">
+      {community}
+    </h4>
+    <p className="text-sm text-gray-600">
+      عدد النقاط: {Array.isArray(blogs) ? calculatePoints(blogs) : 0}
+    </p>
+  </div>
+))}
+
             </div>
           )}
         </motion.section>
@@ -819,7 +834,10 @@ const AuthenticatorDashboard = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {blog.author?.email || blog.author || "غير معروف"}
+                              {typeof blog.author === "object"
+  ? blog.author.email || "غير معروف"
+  : blog.author || "غير معروف"}
+
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {new Date(blog.createdAt).toLocaleDateString(

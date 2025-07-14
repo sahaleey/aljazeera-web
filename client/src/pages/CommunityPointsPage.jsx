@@ -47,6 +47,7 @@ const CommunityPoints = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
   const controls = useAnimation();
+  const [allZeroPoints, setAllZeroPoints] = useState(false);
 
   const particlesInit = async (main) => {
     await loadFull(main);
@@ -120,6 +121,9 @@ const CommunityPoints = () => {
         .sort((a, b) => b.points - a.points);
 
       setLeaderboard(leaderboardData);
+      const totalPoints = leaderboardData.reduce((sum, c) => sum + c.points, 0);
+      setAllZeroPoints(totalPoints === 0);
+
       notify.success("✅ تم تحميل النقاط بنجاح");
       await controls.start("visible");
     } catch (err) {
@@ -417,82 +421,89 @@ const CommunityPoints = () => {
                 التصنيف الحالي للمجتمعات
               </h2>
             </div>
-            <div className="p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-              {leaderboard.slice(0, 3).map((community, index) => (
-                <motion.div
-                  key={community.key}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                  whileHover={hoverEffect}
-                  whileTap={tapEffect}
-                  className={`p-4 rounded-xl shadow-md relative overflow-hidden ${
-                    index === 0
-                      ? "bg-gradient-to-br from-yellow-100 to-yellow-50 border border-yellow-200"
-                      : index === 1
-                      ? "bg-gradient-to-br from-gray-100 to-gray-50 border border-gray-200"
-                      : "bg-gradient-to-br from-amber-100 to-amber-50 border border-amber-200"
-                  }`}
-                >
-                  {index === 0 && (
-                    <motion.div
-                      className="absolute top-0 right-0 w-16 h-16 overflow-hidden"
-                      animate={{
-                        rotate: [0, 360],
-                      }}
-                      transition={{
-                        duration: 20,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
-                    >
-                      <div className="absolute -right-8 -top-8 w-32 h-32 bg-yellow-200 opacity-10 rounded-full" />
-                    </motion.div>
-                  )}
-                  <div className="flex items-center gap-3 relative z-10">
-                    <div
-                      className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center shadow-md ${
-                        index === 0
-                          ? "bg-gradient-to-br from-yellow-400 to-yellow-500 text-white"
-                          : index === 1
-                          ? "bg-gradient-to-br from-gray-400 to-gray-500 text-white"
-                          : "bg-gradient-to-br from-amber-400 to-amber-500 text-white"
-                      }`}
-                    >
-                      {index === 0 ? (
-                        <FiAward className="text-xl" />
-                      ) : (
-                        <span className="font-bold">{index + 1}</span>
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-lg">{community.name}</h3>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-600">
-                          {community.points} نقطة
-                        </span>
-                        <motion.div
-                          animate={{
-                            scale: [1, 1.1, 1],
-                            opacity: [0.8, 1, 0.8],
-                          }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                          }}
-                          className="text-xs px-2 py-1 bg-white rounded-full shadow-inner"
-                        >
-                          {Math.round(
-                            (community.points / leaderboard[0]?.points) * 100
-                          )}
-                          %
-                        </motion.div>
+
+            {allZeroPoints ? (
+              <div className="p-8 text-center text-gray-500 text-lg">
+                😴 لا توجد نقاط حتى الآن، يبدو أن الكل في إجازة!
+              </div>
+            ) : (
+              <div className="p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+                {leaderboard.slice(0, 3).map((community, index) => (
+                  <motion.div
+                    key={community.key}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                    whileHover={hoverEffect}
+                    whileTap={tapEffect}
+                    className={`p-4 rounded-xl shadow-md relative overflow-hidden ${
+                      index === 0
+                        ? "bg-gradient-to-br from-yellow-100 to-yellow-50 border border-yellow-200"
+                        : index === 1
+                        ? "bg-gradient-to-br from-gray-100 to-gray-50 border border-gray-200"
+                        : "bg-gradient-to-br from-amber-100 to-amber-50 border border-amber-200"
+                    }`}
+                  >
+                    {index === 0 && (
+                      <motion.div
+                        className="absolute top-0 right-0 w-16 h-16 overflow-hidden"
+                        animate={{
+                          rotate: [0, 360],
+                        }}
+                        transition={{
+                          duration: 20,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }}
+                      >
+                        <div className="absolute -right-8 -top-8 w-32 h-32 bg-yellow-200 opacity-10 rounded-full" />
+                      </motion.div>
+                    )}
+                    <div className="flex items-center gap-3 relative z-10">
+                      <div
+                        className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center shadow-md ${
+                          index === 0
+                            ? "bg-gradient-to-br from-yellow-400 to-yellow-500 text-white"
+                            : index === 1
+                            ? "bg-gradient-to-br from-gray-400 to-gray-500 text-white"
+                            : "bg-gradient-to-br from-amber-400 to-amber-500 text-white"
+                        }`}
+                      >
+                        {index === 0 ? (
+                          <FiAward className="text-xl" />
+                        ) : (
+                          <span className="font-bold">{index + 1}</span>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg">{community.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-gray-600">
+                            {community.points} نقطة
+                          </span>
+                          <motion.div
+                            animate={{
+                              scale: [1, 1.1, 1],
+                              opacity: [0.8, 1, 0.8],
+                            }}
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                            }}
+                            className="text-xs px-2 py-1 bg-white rounded-full shadow-inner"
+                          >
+                            {Math.round(
+                              (community.points / leaderboard[0]?.points) * 100
+                            )}
+                            %
+                          </motion.div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </motion.div>
         )}
 

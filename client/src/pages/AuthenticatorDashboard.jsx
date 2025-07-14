@@ -133,13 +133,7 @@ const AuthenticatorDashboard = () => {
   };
   const calculatePoints = (blogs) => {
     return blogs.reduce((sum, blog) => {
-      let points = 1;
-      const likes = blog.likes?.length || 0;
-      const views = blog.views || 0;
-      if (likes >= 10) points += 1;
-      if (likes >= 25) points += 1;
-      if (views >= 50) points += 1;
-      return sum + points;
+      return blog.verified ? sum + 1 : sum;
     }, 0);
   };
 

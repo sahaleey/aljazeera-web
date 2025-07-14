@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { GiTrophiesShelf } from "react-icons/gi";
-
+import { useCallback } from "react";
 import {
   FiChevronDown,
   FiChevronUp,
@@ -16,6 +16,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
+
 import { AiFillLike } from "react-icons/ai";
 import { FaEye } from "react-icons/fa";
 
@@ -49,9 +50,10 @@ const CommunityPoints = () => {
   const controls = useAnimation();
   const [allZeroPoints, setAllZeroPoints] = useState(false);
 
-  const particlesInit = async (main) => {
-    await loadFull(main);
-  };
+  const particlesInit = useCallback(async (engine) => {
+    console.log("🌟 tsParticles engine loaded");
+    await loadFull(engine);
+  }, []);
 
   const notify = {
     success: (msg) =>
@@ -65,16 +67,6 @@ const CommunityPoints = () => {
         position: "top-right",
         className: "toast-error",
       }),
-  };
-
-  const calculatePoints = (blog) => {
-    let points = 1;
-    const likes = blog.likes?.length || 0;
-    const views = blog.views || 0;
-    if (likes >= 10) points += 1;
-    if (likes >= 25) points += 1;
-    if (views >= 50) points += 1;
-    return points;
   };
 
   const fetchCommunityPoints = async () => {
@@ -104,7 +96,7 @@ const CommunityPoints = () => {
           if (Array.isArray(blogs)) {
             grouped[key] = blogs.map((blog) => ({
               ...blog,
-              earnedPoints: calculatePoints(blog),
+              earnedPoints: blog.verified ? 1 : 0,
             }));
           }
         });

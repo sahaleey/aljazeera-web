@@ -44,7 +44,7 @@ const AuthenticatorDashboard = () => {
   });
 
   const navigate = useNavigate();
-  const adminEmails = ["ajua46244@gmail.com"];
+  const adminEmails = ["ajua46244@gmail.com", "lisanuljazeerahisan@gmail.com"];
 
   const notify = {
     success: (message) =>

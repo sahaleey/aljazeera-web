@@ -3,6 +3,7 @@ const router = express.Router();
 const admin = require("firebase-admin");
 const User = require("../models/User");
 const verifyUser = require("../middlewares/verifyUser");
+const bcrypt = require("bcryptjs");
 // MongoDB model
 
 // 🔐 Middleware to verify Firebase token
@@ -24,19 +25,23 @@ const verifyToken = async (req, res, next) => {
 
 router.post("/register", verifyUser, async (req, res) => {
   try {
-    const { name, photoUrl } = req.body;
+    const { name, photoUrl, password } = req.body;
     const email = req.firebaseUser?.email;
 
-    if (!email) {
-      return res.status(400).json({ message: "📧 البريد الإلكتروني مطلوب" });
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ message: "📧 البريد الإلكتروني وكلمة المرور مطلوبة" });
     }
 
     let user = await User.findOne({ email });
 
     if (!user) {
+      const hashedPassword = await bcrypt.hash(password, 10);
       // 🆕 Create new user
       user = new User({
         email,
+        password: hashedPassword,
         name,
         role: "user",
         blocked: false,

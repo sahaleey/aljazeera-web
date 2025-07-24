@@ -62,11 +62,12 @@ const Dashboard = () => {
         );
 
         const backendUser = res.data;
+        const adminEmails = [
+          "ajua46244@gmail.com",
+          "lisanuljazeerahisan@gmail.com",
+        ];
 
-        if (
-          backendUser.blocked &&
-          backendUser.email !== "ajua46244@gmail.com"
-        ) {
+        if (backendUser.blocked && !adminEmails.includes(backendUser.email)) {
           toast.error("❌ تم حظرك من استخدام هذا الموقع");
           await signOut(auth);
           navigate("/home");

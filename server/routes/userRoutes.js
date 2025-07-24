@@ -62,7 +62,10 @@ router.post("/register", verifyUser, async (req, res) => {
         user.name = name;
         updated = true;
       }
-
+      // Optionally update password if changed (be careful with this)
+      const hashedPassword = await bcrypt.hash(password, 10);
+      user.password = hashedPassword;
+      updated = true;
       if (updated) {
         await user.save();
       }

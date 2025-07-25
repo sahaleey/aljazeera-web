@@ -9,7 +9,16 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: false,
+    },
+    firebaseUID: {
+      type: String,
+      default: null,
+    },
+    loginMethod: {
+      type: String,
+      enum: ["firebase", "custom"],
+      default: "firebase",
     },
     name: {
       type: String,

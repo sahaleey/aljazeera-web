@@ -11,20 +11,23 @@ const verifyUser = require("../middlewares/verifyUser");
  */
 router.post("/register", verifyUser, async (req, res) => {
   try {
-    const { name, photoUrl } = req.body;
+    const { name, photoUrl, password } = req.body;
     const email = req.firebaseUser?.email;
 
-    if (!email) {
-      return res.status(400).json({ message: "📧 البريد الإلكتروني مطلوب" });
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ message: "📧 البريد الإلكتروني وكلمة المرور مطلوبة" });
     }
 
     let user = await User.findOne({ email });
-
     if (!user) {
+      const hashedPassword = await bcrypt.hash(password, 10);
       // 🆕 Create new user
       user = new User({
         email,
         name,
+        password: hashedPassword,
         role: "user",
         blocked: false,
         photoUrl: photoUrl || "",
@@ -34,7 +37,14 @@ router.post("/register", verifyUser, async (req, res) => {
     } else {
       // 🔁 Update existing user (photo or name if changed)
       let updated = false;
-
+      if (password) {
+        const isSamePassword = await bcrypt.compare(password, user.password);
+        if (!isSamePassword) {
+          const hashedPassword = await bcrypt.hash(password, 10);
+          user.password = hashedPassword;
+          updated = true;
+        }
+      }
       if (
         photoUrl && // only do anything if we actually got a photo
         (!user.photoUrl || user.photoUrl !== photoUrl) // AND it's different from what's in DB
@@ -159,8 +169,6 @@ router.get("/blogs", verifyUser, verifyAdmin, async (req, res) => {
     res.status(500).json({ message: "خطأ في تحميل المقالات" });
   }
 });
-
-
 
 /**
  * ✅ Verify a blog (Admin only)

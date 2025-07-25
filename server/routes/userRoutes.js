@@ -53,6 +53,16 @@ router.post("/register", verifyUser, async (req, res) => {
       // 🔁 Update existing user (photo or name if changed)
       let updated = false;
 
+      // Inside your else block
+      if (password) {
+        const isSamePassword = await bcrypt.compare(password, user.password);
+        if (!isSamePassword) {
+          const hashedPassword = await bcrypt.hash(password, 10);
+          user.password = hashedPassword;
+          updated = true;
+        }
+      }
+
       if (photoUrl && (!user.photoUrl || user.photoUrl !== photoUrl)) {
         user.photoUrl = photoUrl;
         updated = true;

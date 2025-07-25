@@ -5,7 +5,6 @@ const path = require("path");
 require("dotenv").config();
 const blogRoutes = require("./routes/blogRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-const userRoutes = require("./routes/userRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -13,7 +12,6 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/blogs", blogRoutes);
 app.use("/api/users", adminRoutes);
-app.use("/api/users", userRoutes);
 app.get("/", (req, res) => {
   res.send("API is running 💨");
 });

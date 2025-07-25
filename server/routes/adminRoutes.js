@@ -4,6 +4,7 @@ const User = require("../models/User");
 const Blog = require("../models/Blog");
 const verifyAdmin = require("../middlewares/verifyAdmin");
 const verifyUser = require("../middlewares/verifyUser");
+const bcrypt = require("bcryptjs");
 
 /**
  * ✅ Register user after Firebase login
@@ -21,13 +22,14 @@ router.post("/register", verifyUser, async (req, res) => {
     }
 
     let user = await User.findOne({ email });
+
     if (!user) {
       const hashedPassword = await bcrypt.hash(password, 10);
       // 🆕 Create new user
       user = new User({
         email,
-        name,
         password: hashedPassword,
+        name,
         role: "user",
         blocked: false,
         photoUrl: photoUrl || "",
@@ -37,6 +39,8 @@ router.post("/register", verifyUser, async (req, res) => {
     } else {
       // 🔁 Update existing user (photo or name if changed)
       let updated = false;
+
+      // Inside your else block
       if (password) {
         const isSamePassword = await bcrypt.compare(password, user.password);
         if (!isSamePassword) {
@@ -45,10 +49,8 @@ router.post("/register", verifyUser, async (req, res) => {
           updated = true;
         }
       }
-      if (
-        photoUrl && // only do anything if we actually got a photo
-        (!user.photoUrl || user.photoUrl !== photoUrl) // AND it's different from what's in DB
-      ) {
+
+      if (photoUrl && (!user.photoUrl || user.photoUrl !== photoUrl)) {
         user.photoUrl = photoUrl;
         updated = true;
       }
@@ -57,7 +59,10 @@ router.post("/register", verifyUser, async (req, res) => {
         user.name = name;
         updated = true;
       }
-
+      // Optionally update password if changed (be careful with this)
+      const hashedPassword = await bcrypt.hash(password, 10);
+      user.password = hashedPassword;
+      updated = true;
       if (updated) {
         await user.save();
       }

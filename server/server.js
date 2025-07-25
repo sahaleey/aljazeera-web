@@ -13,6 +13,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/blogs", blogRoutes);
 app.use("/api/users", adminRoutes);
+app.use("/api/users", userRoutes);
 app.get("/", (req, res) => {
   res.send("API is running 💨");
 });

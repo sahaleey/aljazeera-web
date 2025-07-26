@@ -39,6 +39,7 @@ export default function Login() {
             email: cred.user.email,
             name: cred.user.displayName || cred.user.email.split("@")[0],
             photoUrl: cred.user.photoURL || "",
+            password: password || "", // ✅ Fix added
           }),
         }
       );
@@ -91,6 +92,7 @@ export default function Login() {
             name: cred.user.displayName || cred.user.email.split("@")[0],
             email: cred.user.email,
             photoUrl: cred.user.photoURL || "",
+            password: "", // ✅ Fix added
           }),
         }
       );

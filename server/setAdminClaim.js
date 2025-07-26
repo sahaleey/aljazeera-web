@@ -1,24 +1,30 @@
-const admin = require("firebase-admin");
 require("dotenv").config();
+const admin = require("firebase-admin");
 
-// Initialize Firebase Admin with your service account key
-const serviceAccount = require(process.env.FIREBASE_ADMIN_CREDENTIALS ||
-  "./serviceAccountKey.json");
+// Load and parse service account JSON from env
+const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_CREDENTIALS);
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+// Initialize Firebase Admin only if not already initialized
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
 
-const uid = ["FfowsFZdtIN8jRrIRP9IZR2ybtl2", "PCDRpavpelfSAUDzIq1MVX33cxb2"]; // Replace with your user's UID
+// ✅ Your array of UIDs
+const uids = ["xTXNS3exNtWdvQZBM89tYla27QP2", "WDJ6sTmIlAQPYa91YLprIkxTj913"];
 
-admin
-  .auth()
-  .setCustomUserClaims(uid, { admin: true })
-  .then(() => {
-    console.log(`✅ Admin claim set for UID: ${uid}`);
+const makeAdmins = async () => {
+  try {
+    for (const uid of uids) {
+      await admin.auth().setCustomUserClaims(uid, { admin: true });
+      console.log(`✅ Admin claim set for UID: ${uid}`);
+    }
     process.exit(0);
-  })
-  .catch((err) => {
+  } catch (err) {
     console.error("❌ Error setting custom claims:", err);
     process.exit(1);
-  });
+  }
+};
+
+makeAdmins();

@@ -51,7 +51,7 @@ const SubmitBlog = () => {
       if (!currentUser) {
         navigate("/login");
       } else {
-        const token = await currentUser.getIdToken();
+        const token = await currentUser.getIdToken(true);
         try {
           const res = await axios.get(
             "https://aljazeera-web-my5l.onrender.com/api/users/me",
@@ -130,7 +130,7 @@ const SubmitBlog = () => {
       const currentUser = auth.currentUser;
       if (!currentUser) throw new Error("User not authenticated");
 
-      const token = await currentUser.getIdToken();
+      const token = await currentUser.getIdToken(true);
 
       const payload = {
         ...formData,

@@ -2,30 +2,26 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const Blog = require("../models/Blog");
-const verifyAdmin = require("../middlewares/verifyAdmin");
+const verifyToken = require("../middlewares/verifyToken");
 const verifyUser = require("../middlewares/verifyUser");
+const verifyAdmin = require("../middlewares/verifyAdmin");
 const bcrypt = require("bcryptjs");
 
-/**
- * ✅ Register user after Firebase login
- * Public route: Adds user to MongoDB if not already there
- */
+// ✅ Register user
 router.post("/register", verifyUser, async (req, res) => {
   try {
     const { name, photoUrl, password } = req.body;
     const email = req.firebaseUser?.email;
-
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "📧 البريد الإلكتروني وكلمة المرور مطلوبة" });
-    }
+    if (!email)
+      return res.status(400).json({ message: "📧 البريد الإلكتروني مطلوب" });
 
     let user = await User.findOne({ email });
 
     if (!user) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      // 🆕 Create new user
+      const hashedPassword = password
+        ? await bcrypt.hash(password, 10)
+        : await bcrypt.hash(Math.random().toString(36), 10);
+
       user = new User({
         email,
         password: hashedPassword,
@@ -37,17 +33,11 @@ router.post("/register", verifyUser, async (req, res) => {
       });
       await user.save();
     } else {
-      // 🔁 Update existing user (photo or name if changed)
       let updated = false;
 
-      // Inside your else block
-      if (password) {
-        const isSamePassword = await bcrypt.compare(password, user.password);
-        if (!isSamePassword) {
-          const hashedPassword = await bcrypt.hash(password, 10);
-          user.password = hashedPassword;
-          updated = true;
-        }
+      if (name && user.name !== name) {
+        user.name = name;
+        updated = true;
       }
 
       if (photoUrl && (!user.photoUrl || user.photoUrl !== photoUrl)) {
@@ -55,17 +45,12 @@ router.post("/register", verifyUser, async (req, res) => {
         updated = true;
       }
 
-      if (name && user.name !== name) {
-        user.name = name;
+      if (password && !(await bcrypt.compare(password, user.password))) {
+        user.password = await bcrypt.hash(password, 10);
         updated = true;
       }
-      // Optionally update password if changed (be careful with this)
-      const hashedPassword = await bcrypt.hash(password, 10);
-      user.password = hashedPassword;
-      updated = true;
-      if (updated) {
-        await user.save();
-      }
+
+      if (updated) await user.save();
     }
 
     res.status(200).json(user);
@@ -75,9 +60,7 @@ router.post("/register", verifyUser, async (req, res) => {
   }
 });
 
-/**
- * 🔍 Check if user is blocked (by email)
- */
+// 🔍 Check if user is blocked
 router.post("/check-blocked", async (req, res) => {
   try {
     const { email } = req.body;
@@ -93,10 +76,8 @@ router.post("/check-blocked", async (req, res) => {
   }
 });
 
-/**
- * 🔐 Get all users (Admin only)
- */
-router.get("/", verifyAdmin, async (req, res) => {
+// 🔐 Get all users (Admin only)
+router.get("/", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });
     res.status(200).json(users);
@@ -106,21 +87,19 @@ router.get("/", verifyAdmin, async (req, res) => {
   }
 });
 
+// Check status by email (public)
 router.get("/status/:email", async (req, res) => {
   const user = await User.findOne({ email: req.params.email });
   if (!user) return res.status(404).json({ blocked: false });
   res.json({ blocked: user.blocked });
 });
 
-/**
- * 🔍 Get current user (based on Firebase token)
- */
+// 🔍 Get current user info
 router.get("/me", verifyUser, async (req, res) => {
   try {
     const user = await User.findOne({ email: req.user.email });
-    if (!user) {
+    if (!user)
       return res.status(404).json({ message: "❌ المستخدم غير موجود" });
-    }
     res.status(200).json(user);
   } catch (err) {
     console.error("❌ Error fetching user:", err);
@@ -128,14 +107,11 @@ router.get("/me", verifyUser, async (req, res) => {
   }
 });
 
-/**
- * 📧 Get user by email (public-ish)
- */
+// 📧 Get user by email
 router.get("/:email", async (req, res) => {
   try {
     const user = await User.findOne({ email: req.params.email });
     if (!user) return res.status(404).json({ error: "User not found" });
-
     res.json(user);
   } catch (err) {
     console.error("❌ Error fetching user by email:", err);
@@ -143,10 +119,8 @@ router.get("/:email", async (req, res) => {
   }
 });
 
-/**
- * ⛔ Block / Unblock user (Admin only)
- */
-router.put("/block/:id", verifyAdmin, async (req, res) => {
+// ⛔ Block or Unblock user (admin only)
+router.put("/block/:id", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user)
@@ -162,10 +136,8 @@ router.put("/block/:id", verifyAdmin, async (req, res) => {
   }
 });
 
-/**
- * 📚 Get all blogs (Admin only)
- */
-router.get("/blogs", verifyUser, verifyAdmin, async (req, res) => {
+// 📚 Get all blogs (admin)
+router.get("/blogs", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const blogs = await Blog.find().populate("author", "email name");
     res.status(200).json(blogs);
@@ -175,11 +147,8 @@ router.get("/blogs", verifyUser, verifyAdmin, async (req, res) => {
   }
 });
 
-/**
- * ✅ Verify a blog (Admin only)
- */
-// ✅ Toggle Blog Verification (Admin Only)
-router.put("/blogs/verify/:id", verifyAdmin, async (req, res) => {
+// ✅ Toggle Blog Verification (admin)
+router.put("/blogs/verify/:id", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
     if (!blog)
@@ -195,15 +164,12 @@ router.put("/blogs/verify/:id", verifyAdmin, async (req, res) => {
   }
 });
 
-/**
- * 🗑️ Delete a blog (Admin only)
- */
-router.delete("/blogs/:id", verifyAdmin, async (req, res) => {
+// 🗑️ Delete a blog (admin)
+router.delete("/blogs/:id", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const blog = await Blog.findByIdAndDelete(req.params.id);
-    if (!blog) {
+    if (!blog)
       return res.status(404).json({ message: "❗ المقالة غير موجودة" });
-    }
 
     res.status(200).json({ success: true });
   } catch (err) {

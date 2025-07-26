@@ -26,6 +26,7 @@ const Dashboard = () => {
   const [error, setError] = useState("");
   const [totalViews, setTotalViews] = useState(0);
   const [topLikedBlog, setTopLikedBlog] = useState(null);
+  const adminEmails = ["ajua46244@gmail.com", "lisanuljazeerahisan@gmail.com"];
 
   const navigate = useNavigate();
 
@@ -36,14 +37,19 @@ const Dashboard = () => {
         return;
       }
 
-      const token = await currentUser.getIdToken();
+      const token = await currentUser.getIdToken(true);
       const email = currentUser.email;
 
       try {
         // Register (if new)
         await axios.post(
           "https://aljazeera-web-my5l.onrender.com/api/users/register",
-          { email },
+          {
+            email,
+            name: currentUser.displayName || email.split("@")[0],
+            photoUrl: currentUser.photoURL || "",
+            password: "firebase-auto", // 🔐 must not be empty!
+          },
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -205,7 +211,7 @@ const Dashboard = () => {
               <span>مقالة جديدة</span>
             </motion.button>
 
-            {user.email === "ajua46244@gmail.com" && (
+            {adminEmails.includes(user.email) && (
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

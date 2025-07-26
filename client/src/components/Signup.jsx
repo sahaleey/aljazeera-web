@@ -43,6 +43,7 @@ export default function Signup() {
             email: user.email,
             name: user.displayName || user.email.split("@")[0],
             photoUrl: user.photoURL || "",
+            password, // ✅ this line is important
           }),
         }
       );
@@ -96,6 +97,7 @@ export default function Signup() {
             email: cred.user.email,
             photoUrl: cred.user.photoURL || "",
             name: cred.user.displayName || cred.user.email.split("@")[0],
+            password: "google", // ✅ To satisfy backend password requirement
           }),
         }
       );

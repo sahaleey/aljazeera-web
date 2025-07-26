@@ -79,7 +79,7 @@ const AuthenticatorDashboard = () => {
       setCheckingAdmin(false);
 
       try {
-        const token = await currentUser.getIdToken();
+        const token = await currentUser.getIdToken(true);
 
         await axios.post(
           "https://aljazeera-web-my5l.onrender.com/api/users/register",
@@ -168,7 +168,7 @@ const AuthenticatorDashboard = () => {
 
   const checkBlocked = async (currentUser) => {
     try {
-      const token = await currentUser.getIdToken();
+      const token = await currentUser.getIdToken(true);
       const res = await axios.get(
         "https://aljazeera-web-my5l.onrender.com/api/users/me",
         {
@@ -269,9 +269,12 @@ const AuthenticatorDashboard = () => {
       const token = await user.getIdToken();
       const blogToDelete = blogs.find((b) => b._id === id);
 
-      await axios.delete(`https://aljazeera-web-my5l.onrender.com/api/blogs/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(
+        `https://aljazeera-web-my5l.onrender.com/api/blogs/${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       await fetchBlogs(token);
       notify.success(`تم حذف مقال "${blogToDelete.title}"`);

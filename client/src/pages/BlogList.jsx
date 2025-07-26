@@ -32,7 +32,7 @@ const BlogList = ({ userEmail }) => {
       try {
         if (userEmail) {
           const userRes = await axios.get(
-            `https://aljazeera-web.onrender.com/api/users/status/${userEmail}`
+            `https://aljazeera-web-my5l.onrender.com/api/users/status/${userEmail}`
           );
           const isBlocked = userRes.data.blocked;
           const isAdmin = userEmail === "ajua46244@gmail.com";
@@ -44,7 +44,7 @@ const BlogList = ({ userEmail }) => {
         }
 
         const blogRes = await axios.get(
-          "https://aljazeera-web.onrender.com/api/blogs"
+          "https://aljazeera-web-my5l.onrender.com/api/blogs"
         );
         setArticles(blogRes.data.reverse());
       } catch (err) {
@@ -63,7 +63,7 @@ const BlogList = ({ userEmail }) => {
     if (!userEmail) return navigate("/login");
     try {
       const res = await axios.patch(
-        `https://aljazeera-web.onrender.com/api/blogs/like/${slug}`,
+        `https://aljazeera-web-my5l.onrender.com/api/blogs/like/${slug}`,
         { email: userEmail }
       );
       setArticles((prev) =>
@@ -82,7 +82,7 @@ const BlogList = ({ userEmail }) => {
     if (!userEmail) return navigate("/login");
     try {
       const res = await axios.patch(
-        `https://aljazeera-web.onrender.com/api/blogs/dislike/${slug}`,
+        `https://aljazeera-web-my5l.onrender.com/api/blogs/dislike/${slug}`,
         { email: userEmail }
       );
       setArticles((prev) =>
@@ -101,7 +101,7 @@ const BlogList = ({ userEmail }) => {
     if (!userEmail) return;
     try {
       const res = await axios.patch(
-        `https://aljazeera-web.onrender.com/api/blogs/view/${slug}`,
+        `https://aljazeera-web-my5l.onrender.com/api/blogs/view/${slug}`,
         { email: userEmail }
       );
       setArticles((prev) =>

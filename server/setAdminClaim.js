@@ -9,7 +9,7 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-const uid = "FfowsFZdtIN8jRrIRP9IZR2ybtl2"; // Replace with your user's UID
+const uid = ["FfowsFZdtIN8jRrIRP9IZR2ybtl2", "PCDRpavpelfSAUDzIq1MVX33cxb2"]; // Replace with your user's UID
 
 admin
   .auth()

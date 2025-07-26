@@ -42,7 +42,7 @@ const Dashboard = () => {
       try {
         // Register (if new)
         await axios.post(
-          "https://aljazeera-web.onrender.com/api/users/register",
+          "https://aljazeera-web-my5l.onrender.com/api/users/register",
           { email },
           {
             headers: {
@@ -53,7 +53,7 @@ const Dashboard = () => {
 
         // Get full user profile from MongoDB
         const res = await axios.get(
-          "https://aljazeera-web.onrender.com/api/users/me",
+          "https://aljazeera-web-my5l.onrender.com/api/users/me",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -91,7 +91,7 @@ const Dashboard = () => {
   const fetchUserBlogs = async (email) => {
     try {
       const res = await axios.get(
-        `https://aljazeera-web.onrender.com/api/blogs/user?email=${email}`
+        `https://aljazeera-web-my5l.onrender.com/api/blogs/user?email=${email}`
       );
       const data = res.data;
 
@@ -127,7 +127,7 @@ const Dashboard = () => {
     if (window.confirm("هل أنت متأكد من حذف هذه المقالة؟")) {
       try {
         await axios.delete(
-          `https://aljazeera-web.onrender.com/api/blogs/${blogId}`
+          `https://aljazeera-web-my5l.onrender.com/api/blogs/${blogId}`
         );
         setBlogs(blogs.filter((blog) => blog._id !== blogId));
         fetchUserBlogs(user.email);

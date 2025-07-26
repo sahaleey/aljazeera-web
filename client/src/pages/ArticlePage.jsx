@@ -28,7 +28,7 @@ const ArticlePage = () => {
       try {
         // 1️⃣ Fetch blog data
         const res = await axios.get(
-          `https://aljazeera-web.onrender.com/api/blogs/${slug}`
+          `https://aljazeera-web-my5l.onrender.com/api/blogs/${slug}`
         );
         const blog = res.data;
         setArticle(blog);
@@ -37,7 +37,7 @@ const ArticlePage = () => {
         if (blog?.email) {
           try {
             const userRes = await axios.get(
-              `https://aljazeera-web.onrender.com/api/users/${blog.email}`
+              `https://aljazeera-web-my5l.onrender.com/api/users/${blog.email}`
             );
             if (userRes.data?.photoUrl) {
               setUserPhoto(userRes.data.photoUrl);
@@ -49,7 +49,7 @@ const ArticlePage = () => {
 
         // 3️⃣ Fetch related blogs
         const relatedRes = await axios.get(
-          `https://aljazeera-web.onrender.com/api/blogs?category=${blog.category}`
+          `https://aljazeera-web-my5l.onrender.com/api/blogs?category=${blog.category}`
         );
         const filteredRelated = relatedRes.data.filter((a) => a.slug !== slug);
         setRelated(filteredRelated.slice(0, 3));
@@ -73,7 +73,7 @@ const ArticlePage = () => {
           const token = await user.getIdToken();
 
           await axios.post(
-            "https://aljazeera-web.onrender.com/api/users/register",
+            "https://aljazeera-web-my5l.onrender.com/api/users/register",
             { email, name, photoUrl },
             {
               headers: {

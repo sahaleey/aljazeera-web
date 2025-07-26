@@ -32,7 +32,7 @@ export default function Signup() {
 
       // 📮 Backend registration
       const res = await fetch(
-        "https://aljazeera-web.onrender.com/api/users/register",
+        "https://aljazeera-web-my5l.onrender.com/api/users/register",
         {
           method: "POST",
           headers: {
@@ -51,7 +51,7 @@ export default function Signup() {
 
       // 🛑 Block check
       const blockRes = await fetch(
-        "https://aljazeera-web.onrender.com/api/users/me",
+        "https://aljazeera-web-my5l.onrender.com/api/users/me",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -84,21 +84,24 @@ export default function Signup() {
       const cred = await signInWithPopup(auth, provider);
       const token = await cred.user.getIdToken();
 
-      await fetch("https://aljazeera-web.onrender.com/api/users/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          email: cred.user.email,
-          photoUrl: cred.user.photoURL || "",
-          name: cred.user.displayName || cred.user.email.split("@")[0],
-        }),
-      });
+      await fetch(
+        "https://aljazeera-web-my5l.onrender.com/api/users/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            email: cred.user.email,
+            photoUrl: cred.user.photoURL || "",
+            name: cred.user.displayName || cred.user.email.split("@")[0],
+          }),
+        }
+      );
 
       const blockRes = await fetch(
-        "https://aljazeera-web.onrender.com/api/users/me",
+        "https://aljazeera-web-my5l.onrender.com/api/users/me",
         {
           headers: { Authorization: `Bearer ${token}` },
         }

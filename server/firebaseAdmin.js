@@ -1,13 +1,19 @@
-require("dotenv").config();
 const admin = require("firebase-admin");
 
-// Parse the JSON string from the env variable
-const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_CREDENTIALS);
+const base64 = process.env.FIREBASE_ADMIN_CREDENTIALS_BASE64;
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+if (!base64) {
+  throw new Error(
+    "Firebase Admin credentials not found in environment variables."
+  );
 }
+
+const serviceAccount = JSON.parse(
+  Buffer.from(base64, "base64").toString("utf-8")
+);
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
 module.exports = admin;

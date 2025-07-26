@@ -1,17 +1,21 @@
 require("dotenv").config();
 const admin = require("firebase-admin");
 
-// Load and parse service account JSON from env
-const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_CREDENTIALS);
+// ✅ Decode base64 credentials from environment variable
+const decoded = Buffer.from(
+  process.env.FIREBASE_ADMIN_CREDENTIALS_BASE64,
+  "base64"
+).toString("utf-8");
+const serviceAccount = JSON.parse(decoded);
 
-// Initialize Firebase Admin only if not already initialized
+// ✅ Initialize Firebase Admin if not already initialized
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
   });
 }
 
-// ✅ Your array of UIDs
+// ✅ Your array of UIDs to make admins
 const uids = ["xTXNS3exNtWdvQZBM89tYla27QP2", "WDJ6sTmIlAQPYa91YLprIkxTj913"];
 
 const makeAdmins = async () => {

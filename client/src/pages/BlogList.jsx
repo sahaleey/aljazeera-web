@@ -287,13 +287,6 @@ const BlogList = ({ userEmail }) => {
                       <FiEye className="text-green-600" />
                       <span>{article.views || 0} مشاهدة</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <FiClock className="text-green-600" />
-                      <span>
-                        {Math.ceil(article.content.split(" ").length / 150)}{" "}
-                        دقائق
-                      </span>
-                    </div>
                   </div>
 
                   <div className="flex justify-between items-center">

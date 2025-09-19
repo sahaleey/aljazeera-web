@@ -7,6 +7,8 @@ import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { slugify } from "transliteration";
 import toast from "react-hot-toast";
+import ReactQuill from "react-quill"; // Quill editor
+import "react-quill/dist/quill.snow.css"; // Quill editor theme
 
 const SubmitBlog = () => {
   const navigate = useNavigate();
@@ -45,6 +47,23 @@ const SubmitBlog = () => {
     "سعادة",
     "الصف الأول",
   ];
+
+  // ✨ START: Configuration for React Quill Toolbar ✨
+  const modules = {
+    toolbar: [
+      [{ header: [1, 2, 3, false] }],
+      ["bold", "italic", "underline", "strike", "blockquote"],
+      [
+        { list: "ordered" },
+        { list: "bullet" },
+        { indent: "-1" },
+        { indent: "+1" },
+      ],
+      ["link"],
+      ["clean"],
+    ],
+  };
+  // ✨ END: Configuration for React Quill Toolbar ✨
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -87,7 +106,6 @@ const SubmitBlog = () => {
     return () => unsubscribe();
   }, [navigate]);
 
-  // Autofill poem structure if empty and category is "الأشعار"
   useEffect(() => {
     if (formData.category === "الأشعار" && formData.content.trim() === "") {
       setFormData((prev) => ({
@@ -97,22 +115,33 @@ const SubmitBlog = () => {
     }
   }, [formData.category]);
 
-  const generateSlug = (text) => {
-    const asciiSlug = slugify(text);
-    const finalSlug = asciiSlug
-      .toLowerCase()
-      .replace(/[^\w]+/g, "-")
-      .replace(/(^-|-$)/g, "");
-
-    return finalSlug || `blog-${Date.now()}`;
-  };
-
+  // Handler for regular input fields
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+  };
+
+  // ✨ Special handler for React Quill's content changes ✨
+  const handleContentChange = (content) => {
+    setFormData((prev) => ({
+      ...prev,
+      content: content,
+    }));
+  };
+
+  const generateSlug = (text) => {
+    const asciiSlug = slugify(text);
+    const finalSlug = asciiSlug
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, "") // Remove non-word chars except spaces and hyphens
+      .trim()
+      .replace(/\s+/g, "-") // Replace spaces with hyphens
+      .replace(/-+/g, "-"); // Replace multiple hyphens with a single one
+
+    return finalSlug || `blog-${Date.now()}`;
   };
 
   const showNotification = (message, type) => {
@@ -271,6 +300,7 @@ const SubmitBlog = () => {
               ))}
             </select>
           </div>
+
           {/* Community Selector */}
           <div>
             <label className="block text-lg font-medium text-gray-800 mb-3">
@@ -293,7 +323,7 @@ const SubmitBlog = () => {
             </select>
           </div>
 
-          {/* Content - Dynamic */}
+          {/* ✨ START: Updated Content Section ✨ */}
           <div>
             <label className="block text-lg font-medium text-gray-800 mb-3">
               محتوى {formData.category === "الأشعار" ? "القصيدة" : "المقال"} *
@@ -309,18 +339,18 @@ const SubmitBlog = () => {
                 className="w-full px-5 py-3 text-lg border border-green-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-400 transition font-[Amiri]"
               />
             ) : (
-              <textarea
-                name="content"
+              <ReactQuill
+                theme="snow"
                 value={formData.content}
-                onChange={handleChange}
-                required
+                onChange={handleContentChange}
                 disabled={loading}
-                rows="12"
-                className="w-full px-5 py-3 text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-400 transition"
+                className="bg-white"
                 placeholder="اكتب محتوى المقال هنا..."
+                modules={modules}
               />
             )}
           </div>
+          {/* ✨ END: Updated Content Section ✨ */}
 
           {/* Submit */}
           <motion.button

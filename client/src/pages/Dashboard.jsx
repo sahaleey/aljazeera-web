@@ -210,7 +210,6 @@ const Dashboard = () => {
               <FiPlusCircle />
               <span>مقالة جديدة</span>
             </motion.button>
-
             {adminEmails.includes(user.email) && (
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -222,7 +221,6 @@ const Dashboard = () => {
                 <span>لوحة الإدارة</span>
               </motion.button>
             )}
-
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -268,7 +266,6 @@ const Dashboard = () => {
               />
             </div>
           </motion.div>
-
           {topLikedBlog && (
             <motion.div
               whileHover={{ y: -5 }}
@@ -330,7 +327,6 @@ const Dashboard = () => {
               </div>
             </motion.div>
           </div>
-
           {loading ? (
             <div className="p-8 flex justify-center">
               <motion.div
@@ -430,11 +426,12 @@ const Dashboard = () => {
                             {blog.likes?.length || 0} إعجاب
                           </span>
                         </div>
-                        <p className="text-gray-700 line-clamp-2 mb-4">
-                          {blog.content}
+                        {/* THE FIX IS APPLIED ON THE LINE BELOW */}
+                        <p className="text-gray-700 line-clamp-2 mb-4 break-words">
+                          {blog.content.replace(/<[^>]+>/g, "")}
                         </p>
                         <Link
-                          to={`/article/${blog.slug}`}
+                          to={`/blog/${blog.slug}`}
                           className="inline-flex items-center text-sm text-green-600 font-medium hover:text-green-800 transition-colors"
                         >
                           <span>قراءة المقال</span>

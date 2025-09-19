@@ -74,3 +74,11 @@ body {
   margin-right: 1.5em;
   margin-bottom: 1em;
 }
+
+.prose p {
+  text-indent: 1.5rem;
+}
+
+.prose p:first-of-type {
+  text-indent: 0;
+}

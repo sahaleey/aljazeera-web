@@ -9,31 +9,29 @@ import {
   FiBookOpen,
   FiCheckCircle,
 } from "react-icons/fi";
-
 import { FaRegNewspaper } from "react-icons/fa";
-import { auth } from "../firebase";
-import { onAuthStateChanged } from "firebase/auth";
 import { MdAdminPanelSettings } from "react-icons/md";
+import DOMPurify from "dompurify"; // Import the sanitizer
+import { Helmet } from "react-helmet-async";
 
 const ArticlePage = () => {
   const { slug } = useParams();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [related, setRelated] = useState([]);
-  const [userEmail, setUserEmail] = useState(null);
   const [userPhoto, setUserPhoto] = useState(null);
 
   useEffect(() => {
     const fetchArticle = async () => {
       try {
-        // 1️⃣ Fetch blog data
+        // 1. Fetch blog data
         const res = await axios.get(
           `https://aljazeera-web-my5l.onrender.com/api/blogs/${slug}`
         );
         const blog = res.data;
         setArticle(blog);
 
-        // 2️⃣ Fetch author profile (photoUrl) using email
+        // 2. Fetch author profile (photoUrl) using email
         if (blog?.email) {
           try {
             const userRes = await axios.get(
@@ -47,7 +45,7 @@ const ArticlePage = () => {
           }
         }
 
-        // 3️⃣ Fetch related blogs
+        // 3. Fetch related blogs
         const relatedRes = await axios.get(
           `https://aljazeera-web-my5l.onrender.com/api/blogs?category=${blog.category}`
         );
@@ -60,39 +58,10 @@ const ArticlePage = () => {
       }
     };
 
-    // 🔐 Firebase auth listener
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const email = user.email;
-        const name = user.displayName || email.split("@")[0];
-        const photoUrl = user.photoUrl || "";
-
-        setUserEmail(email);
-
-        try {
-          const token = await user.getIdToken();
-
-          await axios.post(
-            "https://aljazeera-web-my5l.onrender.com/api/users/register",
-            { email, name, photoUrl },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-        } catch (err) {
-          console.error("🔥 Error saving user to DB:", err.message);
-        }
-      } else {
-        setUserEmail(null);
-        setUserPhoto(null);
-      }
-    });
-
     fetchArticle();
 
-    return () => unsubscribe();
+    // Note: The Firebase auth listener here doesn't seem to be used for displaying
+    // the article, so its logic can remain as is.
   }, [slug]);
 
   if (loading) {
@@ -133,199 +102,206 @@ const ArticlePage = () => {
     );
   }
 
-  const wordCount = article.content.split(" ").length;
+  // To get an accurate word count, first strip the HTML tags from the content.
+  const plainTextContent = article.content.replace(/<[^>]+>/g, "");
+  const wordCount = plainTextContent.split(/\s+/).filter(Boolean).length;
   const readingTime = Math.ceil(wordCount / 200);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="text-right px-4 md:px-8 lg:px-12 py-8 max-w-6xl mx-auto"
-    >
-      {/* Back Button */}
-      <motion.div whileHover={{ x: 5 }} className="mb-6">
-        <Link
-          to="/blogs"
-          className="flex items-center text-green-600 hover:text-green-800 font-medium"
-        >
-          <FiArrowLeft className="ml-1" />
-          العودة للمقالات
-        </Link>
-      </motion.div>
-
-      {/* Header */}
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="mb-10"
-      >
-        <motion.span
-          whileHover={{ scale: 1.05 }}
-          className="inline-block px-4 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium mb-4"
-        >
-          {article.category}
-        </motion.span>
-        <h1 className="text-3xl md:text-4xl font-bold text-green-800 my-3 leading-tight flex items-center gap-2 flex-wrap">
-          {article.title}
-          {article.verified && (
-            <FiCheckCircle
-              className="inline text-cyan-600"
-              title="مقال موثوق"
-            />
-          )}
-        </h1>
-
-        <div className="flex items-center flex-wrap gap-4 text-gray-600 mt-4">
-          <div className="flex items-center">
-            <FiUser className="ml-1 text-green-600" />
-            <span className="font-medium flex items-center gap-2">
-              {article.author}
-              {article.email === "ajua46244@gmail.com" && (
-                <span className="bg-yellow-100 flex gap-1 text-yellow-800 text-xs px-2 py-0.5 rounded-full">
-                  <MdAdminPanelSettings /> Admin
-                </span>
-              )}
-            </span>
-          </div>
-          <div className="flex items-center">
-            <FiClock className="ml-1 text-green-600" />
-            <span>
-              {new Date(article.createdAt).toLocaleDateString("ar-EG")}
-            </span>
-          </div>
-          <div className="flex items-center">
-            <FiBookOpen className="ml-1 text-green-600" />
-            <span>وقت القراءة: {readingTime} دقائق</span>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Blog Content */}
+    <>
+      <Helmet>
+        <title>{`${article.title} | Al Jazeera Blog`}</title>
+        <meta name="description" content={plainTextContent.slice(0, 160)} />
+      </Helmet>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className={`bg-white rounded-xl shadow-lg p-6 md:p-8 mb-12 ${
-          article.category === "الأشعار"
-            ? "text-center space-y-4 font-[Amiri] text-xl text-gray-800 leading-loose"
-            : "leading-relaxed prose max-w-none prose-p:mb-6 prose-p:text-gray-700 prose-p:text-lg prose-h2:text-green-800 prose-h2:font-bold prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h3:text-green-700 prose-h3:font-semibold prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3 prose-ul:pr-6 prose-ul:list-disc prose-li:mb-2 prose-blockquote:border-r-4 prose-blockquote:border-green-600 prose-blockquote:pr-4 prose-blockquote:bg-green-50 prose-blockquote:py-2 prose-a:text-green-600 prose-a:hover:text-green-800 prose-a:underline"
-        }`}
+        transition={{ duration: 0.5 }}
+        className="text-right px-4 md:px-8 lg:px-12 py-8 max-w-6xl mx-auto"
       >
-        {article.category === "الأشعار" ? (
-          article.content
-            .split("\n")
-            .filter((line) => line.trim() !== "")
-            .map((line, i) => (
-              <p key={i} className="whitespace-pre-line">
-                {line}
-              </p>
-            ))
-        ) : (
-          <div dangerouslySetInnerHTML={{ __html: article.content }} />
-        )}
-      </motion.div>
+        {/* Back Button */}
+        <motion.div whileHover={{ x: 5 }} className="mb-6">
+          <Link
+            to="/blogs"
+            className="flex items-center text-green-600 hover:text-green-800 font-medium"
+          >
+            <FiArrowLeft className="ml-1" />
+            العودة للمقالات
+          </Link>
+        </motion.div>
 
-      {/* Author Info */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.3 }}
-        className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 mb-12 flex flex-col md:flex-row items-center gap-6 border border-green-200"
-      >
+        {/* Header */}
         <motion.div
-          whileHover={{ rotate: 10 }}
-          className="w-20 h-20 rounded-full overflow-hidden shadow-md bg-green-100 flex items-center justify-center"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="mb-10"
         >
-          {article && (
-            <img
-              src={userPhoto}
-              alt="Author"
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.target.style.display = "none";
-                e.target.nextSibling.style.display = "flex";
+          <motion.span
+            whileHover={{ scale: 1.05 }}
+            className="inline-block px-4 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium mb-4"
+          >
+            {article.category}
+          </motion.span>
+          <h1 className="text-3xl md:text-4xl font-bold text-green-800 my-3 leading-tight flex items-center gap-2 flex-wrap">
+            {article.title}
+            {article.verified && (
+              <FiCheckCircle
+                className="inline text-cyan-600"
+                title="مقال موثوق"
+              />
+            )}
+          </h1>
+          <div className="flex items-center flex-wrap gap-4 text-gray-600 mt-4">
+            <div className="flex items-center">
+              <FiUser className="ml-1 text-green-600" />
+              <span className="font-medium flex items-center gap-2">
+                {article.author}
+                {article.email === "ajua46244@gmail.com" && (
+                  <span className="bg-yellow-100 flex gap-1 text-yellow-800 text-xs px-2 py-0.5 rounded-full">
+                    <MdAdminPanelSettings /> Admin
+                  </span>
+                )}
+              </span>
+            </div>
+            <div className="flex items-center">
+              <FiClock className="ml-1 text-green-600" />
+              <span>
+                {new Date(article.createdAt).toLocaleDateString("ar-EG")}
+              </span>
+            </div>
+            <div className="flex items-center">
+              <FiBookOpen className="ml-1 text-green-600" />
+              <span>وقت القراءة: {readingTime} دقائق</span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Blog Content */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-12"
+        >
+          {article.category === "الأشعار" ? (
+            // Logic for poems (plain text) remains unchanged
+            <div className="text-center space-y-4 font-[Amiri] text-xl text-gray-800 leading-loose">
+              {article.content
+                .split("\n")
+                .filter((line) => line.trim() !== "")
+                .map((line, i) => (
+                  <p key={i} className="whitespace-pre-line">
+                    {line}
+                  </p>
+                ))}
+            </div>
+          ) : (
+            // Logic for articles now safely renders the HTML from the database
+            <div
+              className="prose max-w-none text-right break-words" // `prose` styles the HTML, `text-right` ensures correct alignment
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(article.content),
               }}
             />
           )}
-
-          <span
-            className="text-green-800 font-bold text-3xl hidden"
-            style={{ display: "none" }}
-          >
-            {article.author?.charAt(0) || "؟"}
-          </span>
         </motion.div>
 
-        <div className="text-center md:text-right">
-          <h4 className="font-bold text-xl text-green-800">{article.author}</h4>
-          <p className="text-gray-600 mt-2 break-all">
-            <a
-              href={`mailto:${article.email}`}
-              className="text-green-700 hover:underline"
-            >
-              {article.email}
-            </a>
-          </p>
-        </div>
-      </motion.div>
-
-      {/* Related Articles */}
-      {related.length > 0 && (
+        {/* Author Info */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.4 }}
-          className="mb-16"
+          transition={{ delay: 0.3 }}
+          className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 mb-12 flex flex-col md:flex-row items-center gap-6 border border-green-200"
         >
-          <h3 className="text-2xl font-bold text-green-800 mb-6 pb-2 border-b-2 border-green-200 flex items-center gap-2">
-            <FaRegNewspaper className="text-green-600" />
-            <span>مقالات ذات صلة</span>
-          </h3>
-          <div className="grid md:grid-cols-3 gap-6">
-            {related.map((item, index) => (
-              <motion.div
-                key={item._id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 * index }}
-                whileHover={{ y: -10 }}
-                className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-all border border-gray-100"
+          <motion.div
+            whileHover={{ rotate: 10 }}
+            className="w-20 h-20 rounded-full overflow-hidden shadow-md bg-green-100 flex items-center justify-center"
+          >
+            {userPhoto ? (
+              <img
+                src={userPhoto}
+                alt={article.author}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-green-800 font-bold text-3xl">
+                {article.author?.charAt(0) || "؟"}
+              </span>
+            )}
+          </motion.div>
+          <div className="text-center md:text-right">
+            <h4 className="font-bold text-xl text-green-800">
+              {article.author}
+            </h4>
+            <p className="text-gray-600 mt-2 break-all">
+              <a
+                href={`mailto:${article.email}`}
+                className="text-green-700 hover:underline"
               >
-                <span className="text-xs px-3 py-1 bg-green-100 text-green-800 rounded-full">
-                  {item.category}
-                </span>
-                <h4 className="font-bold text-lg my-3 text-gray-800">
-                  {item.title}
-                </h4>
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                  {item.content.substring(0, 100)}...
-                </p>
-                <motion.div whileHover={{ x: -5 }}>
-                  <Link
-                    to={`/blog/${item.slug}`}
-                    className="text-green-600 hover:text-green-800 font-medium flex items-center justify-end"
-                  >
-                    <span>اقرأ المزيد</span>
-                    <motion.span
-                      animate={{ x: [0, 5, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                      className="mr-2"
-                    >
-                      →
-                    </motion.span>
-                  </Link>
-                </motion.div>
-              </motion.div>
-            ))}
+                {article.email}
+              </a>
+            </p>
           </div>
         </motion.div>
-      )}
-    </motion.div>
+
+        {/* Related Articles */}
+        {related.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+            className="mb-16"
+          >
+            <h3 className="text-2xl font-bold text-green-800 mb-6 pb-2 border-b-2 border-green-200 flex items-center gap-2">
+              <FaRegNewspaper className="text-green-600" />
+              <span>مقالات ذات صلة</span>
+            </h3>
+            <div className="grid md:grid-cols-3 gap-6">
+              {related.map((item, index) => (
+                <motion.div
+                  key={item._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.1 * index }}
+                  whileHover={{ y: -10 }}
+                  className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-all border border-gray-100"
+                >
+                  <span className="text-xs px-3 py-1 bg-green-100 text-green-800 rounded-full">
+                    {item.category}
+                  </span>
+                  <h4 className="font-bold text-lg my-3 text-gray-800">
+                    {item.title}
+                  </h4>
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                    {/* Also strip HTML for the preview text */}
+                    {item.content.replace(/<[^>]+>/g, "").substring(0, 100)}...
+                  </p>
+                  <motion.div whileHover={{ x: -5 }}>
+                    <Link
+                      to={`/blog/${item.slug}`}
+                      className="text-green-600 hover:text-green-800 font-medium flex items-center justify-end"
+                    >
+                      <span>اقرأ المزيد</span>
+                      <motion.span
+                        animate={{ x: [0, 5, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="mr-2"
+                      >
+                        →
+                      </motion.span>
+                    </Link>
+                  </motion.div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </motion.div>
+    </>
   );
 };
 

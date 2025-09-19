@@ -4,6 +4,7 @@ import "./index.css";
 import App from "./App.jsx";
 import { BrowserRouter } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
+import { HelmetProvider } from "react-helmet-async";
 
 const RouterWrapper = () => {
   return (
@@ -16,6 +17,10 @@ const RouterWrapper = () => {
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <RouterWrapper />
+    {/* 👇 Just wrap your existing component like this 👇 */}
+    <HelmetProvider>
+      <RouterWrapper />
+    </HelmetProvider>
+    {/* 👆 And you're all set 👆 */}
   </StrictMode>
 );

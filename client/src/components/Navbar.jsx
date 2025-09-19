@@ -82,35 +82,36 @@ const Navbar = () => {
                 </Link>
               )
             )}
-
-            {!user ? (
-              <Link
-                to="/login"
-                className="px-4 py-2 bg-white text-green-700 hover:bg-gray-100 rounded-lg transition duration-300"
-              >
-                تسجيل الدخول
-              </Link>
-            ) : (
-              <Link
-                to="/dashboard"
-                title={user.name || user.email}
-                className="w-9 h-9 rounded-full overflow-hidden bg-white flex items-center justify-center hover:ring-2 hover:ring-green-600 transition"
-              >
-                {user.photoUrl ? (
-                  <img
-                    src={user.photoUrl}
-                    alt="User"
-                    className="w-full h-full object-cover rounded-full"
-                  />
-                ) : (
-                  <span className="text-green-700 font-bold">
-                    {user.name
-                      ? user.name.charAt(0)
-                      : user.email.charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </Link>
-            )}
+            <div className="px-4">
+              {!user ? (
+                <Link
+                  to="/login"
+                  className="px-4 py-2 bg-white text-green-700 hover:bg-gray-100 rounded-lg transition duration-300"
+                >
+                  تسجيل الدخول
+                </Link>
+              ) : (
+                <Link
+                  to="/dashboard"
+                  title={user.name || user.email}
+                  className="w-9 h-9 rounded-full overflow-hidden bg-white flex items-center justify-center hover:ring-2 hover:ring-green-600 transition"
+                >
+                  {user.photoUrl ? (
+                    <img
+                      src={user.photoUrl}
+                      alt="User"
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    <span className="text-green-700 font-bold">
+                      {user.name
+                        ? user.name.charAt(0)
+                        : user.email.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </Link>
+              )}
+            </div>
           </div>
 
           <button

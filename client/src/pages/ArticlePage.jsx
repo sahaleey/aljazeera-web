@@ -156,7 +156,12 @@ const ArticlePage = () => {
             <div className="flex items-center">
               <FiUser className="ml-1 text-green-600" />
               <span className="font-medium flex items-center gap-2">
-                {article.author}
+                <Link
+                  to={`/profile/${article.email}`}
+                  className="hover:underline"
+                >
+                  {article.author}
+                </Link>
                 {article.email === "ajua46244@gmail.com" && (
                   <span className="bg-yellow-100 flex gap-1 text-yellow-800 text-xs px-2 py-0.5 rounded-full">
                     <MdAdminPanelSettings /> Admin

@@ -15,6 +15,7 @@ import Dashboard from "./pages/Dashboard";
 import AuthenticatorDashboard from "./pages/AuthenticatorDashboard";
 import Signup from "./components/Signup";
 import CommunityPoints from "./pages/CommunityPointsPage";
+import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   const [userEmail, setUserEmail] = useState("");
@@ -56,6 +57,7 @@ function App() {
           path="/dashboard"
           element={<Dashboard userEmail={userEmail} />}
         />
+        <Route path="/profile/:email" element={<ProfilePage />} />
       </Routes>
 
       {!hideLayout && <Footer />}

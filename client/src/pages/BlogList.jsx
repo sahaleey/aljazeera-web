@@ -159,7 +159,7 @@ const BlogList = ({ userEmail }) => {
       try {
         if (userEmail) {
           const userRes = await axios.get(
-            `http://localhost:5000/api/users/status/${userEmail}`
+            `https://aljazeera-web.onrender.com/api/users/status/${userEmail}`
           );
           const isUserBlocked = userRes.data.blocked;
           const isAdmin = ADMIN_EMAIL.includes(userEmail);
@@ -168,7 +168,9 @@ const BlogList = ({ userEmail }) => {
             return;
           }
         }
-        const blogRes = await axios.get("http://localhost:5000/api/blogs");
+        const blogRes = await axios.get(
+          "https://aljazeera-web.onrender.com/api/blogs"
+        );
         setArticles(blogRes.data);
       } catch (err) {
         console.error("❌ Error fetching data:", err);
@@ -185,7 +187,7 @@ const BlogList = ({ userEmail }) => {
     try {
       const token = await getAuth().currentUser.getIdToken();
       const res = await axios.patch(
-        `http://localhost:5000/api/blogs/like/${slug}`,
+        `https://aljazeera-web.onrender.com/api/blogs/like/${slug}`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -209,7 +211,7 @@ const BlogList = ({ userEmail }) => {
     try {
       const token = await getAuth().currentUser.getIdToken();
       const res = await axios.patch(
-        `http://localhost:5000/api/blogs/dislike/${slug}`,
+        `https://aljazeera-web.onrender.com/api/blogs/dislike/${slug}`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -231,7 +233,7 @@ const BlogList = ({ userEmail }) => {
   const handleView = async (slug) => {
     try {
       const res = await axios.patch(
-        `http://localhost:5000/api/blogs/view/${slug}`,
+        `https://aljazeera-web.onrender.com/api/blogs/view/${slug}`,
         { email: userEmail }
       );
       setArticles((prev) =>

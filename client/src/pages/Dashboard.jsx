@@ -45,7 +45,7 @@ const Dashboard = () => {
 
       try {
         await axios.post(
-          "http://localhost:5000/api/users/register",
+          "https://aljazeera-web.onrender.com/api/users/register",
           {
             email,
             name: currentUser.displayName || email.split("@")[0],
@@ -58,11 +58,14 @@ const Dashboard = () => {
           }
         );
 
-        const res = await axios.get("http://localhost:5000/api/users/me", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await axios.get(
+          "https://aljazeera-web.onrender.com/api/users/me",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         const backendUser = res.data;
 
@@ -81,11 +84,11 @@ const Dashboard = () => {
 
           const [followersRes, followingRes] = await Promise.all([
             axios.get(
-              `http://localhost:5000/api/follow/${userId}/followers`,
+              `https://aljazeera-web.onrender.com/api/follow/${userId}/followers`,
               config
             ),
             axios.get(
-              `http://localhost:5000/api/follow/${userId}/following`,
+              `https://aljazeera-web.onrender.com/api/follow/${userId}/following`,
               config
             ),
           ]);
@@ -110,7 +113,7 @@ const Dashboard = () => {
   const fetchUserBlogs = async (email) => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/blogs/user?email=${email}`
+        `https://aljazeera-web.onrender.com/api/blogs/user?email=${email}`
       );
       const data = res.data;
 
@@ -148,11 +151,14 @@ const Dashboard = () => {
       const token = await auth.currentUser.getIdToken(true);
 
       // ✅ Include token in headers
-      await axios.delete(`http://localhost:5000/api/blogs/${blogId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await axios.delete(
+        `https://aljazeera-web.onrender.com/api/blogs/${blogId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       // Update UI
       setBlogs(blogs.filter((blog) => blog._id !== blogId));

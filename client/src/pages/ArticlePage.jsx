@@ -34,22 +34,26 @@ const ArticlePage = () => {
     const fetchArticleData = async () => {
       try {
         // Step 1: Fetch the main article first. This is the only blocking request.
-        const res = await axios.get(`http://localhost:5000/api/blogs/${slug}`);
+        const res = await axios.get(
+          `https://aljazeera-web.onrender.com/api/blogs/${slug}`
+        );
         const blog = res.data;
         setArticle(blog);
 
         // Step 2: Once we have the blog, we can fetch all other data in parallel.
         if (blog?.authorId && blog?.email && blog?.category) {
           const promises = [
-            axios.get(`http://localhost:5000/api/users/${blog.email}`),
             axios.get(
-              `http://localhost:5000/api/blogs?category=${blog.category}`
+              `https://aljazeera-web.onrender.com/api/users/${blog.email}`
             ),
             axios.get(
-              `http://localhost:5000/api/follow/${blog.authorId}/followers`
+              `https://aljazeera-web.onrender.com/api/blogs?category=${blog.category}`
             ),
             axios.get(
-              `http://localhost:5000/api/follow/${blog.authorId}/following`
+              `https://aljazeera-web.onrender.com/api/follow/${blog.authorId}/followers`
+            ),
+            axios.get(
+              `https://aljazeera-web.onrender.com/api/follow/${blog.authorId}/following`
             ),
           ];
 
@@ -97,7 +101,7 @@ const ArticlePage = () => {
     const checkFollowingStatus = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/follow/check/${article.authorId}`,
+          `https://aljazeera-web.onrender.com/api/follow/check/${article.authorId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setIsFollowing(res.data.isFollowing);
@@ -124,7 +128,7 @@ const ArticlePage = () => {
     setFollowersCount((prev) => prev + (originalIsFollowing ? -1 : 1));
 
     try {
-      const url = `http://localhost:5000/api/follow/${article.authorId}`;
+      const url = `https://aljazeera-web.onrender.com/api/follow/${article.authorId}`;
       const config = { headers: { Authorization: `Bearer ${token}` } };
 
       // 3. Use the correct HTTP method based on the action.

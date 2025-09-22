@@ -73,11 +73,14 @@ const SubmitBlog = () => {
       } else {
         const token = await currentUser.getIdToken(true);
         try {
-          const res = await axios.get("http://localhost:5000/api/users/me", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+          const res = await axios.get(
+            "https://aljazeera-web.onrender.com/api/users/me",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
 
           if (res.data.blocked) {
             toast.error("❌ تم حظرك من استخدام هذا الموقع");
@@ -167,7 +170,7 @@ const SubmitBlog = () => {
       };
 
       const response = await axios.post(
-        "http://localhost:5000/api/blogs",
+        "https://aljazeera-web.onrender.com/api/blogs",
         payload,
         {
           headers: {

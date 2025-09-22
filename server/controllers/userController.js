@@ -48,7 +48,11 @@ const getUserProfile = async (req, res) => {
     const blogs = await Blog.find({ email: user.email }).sort({
       createdAt: -1,
     });
+
+    // --- THE FIX IS HERE ---
+    // We are now adding the user's _id to the response object.
     res.status(200).json({
+      _id: user._id, // This is the line that was missing
       name: user.name,
       photoUrl: user.photoUrl,
       createdAt: user.createdAt,

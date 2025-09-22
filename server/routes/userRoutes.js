@@ -7,6 +7,7 @@ const {
   getUserStatus,
   getUserProfile,
 } = require("../controllers/userController.js");
+const verifyUser = require("../middlewares/verifyUser.js");
 
 const verifyToken = async (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
@@ -23,8 +24,8 @@ const verifyToken = async (req, res, next) => {
 };
 
 // --- Private Routes ---
-router.post("/register", verifyToken, registerUser);
-router.get("/me", verifyToken, getCurrentUser);
+router.post("/register", verifyUser, registerUser);
+router.get("/me", verifyUser, getCurrentUser);
 
 // --- Public Routes ---
 router.get("/status/:email", getUserStatus);

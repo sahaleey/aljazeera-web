@@ -9,6 +9,7 @@ import {
   FiTrash2,
   FiPlusCircle,
   FiUser,
+  FiUsers,
   FiEye,
   FiHeart,
   FiAlertCircle,
@@ -27,6 +28,8 @@ const Dashboard = () => {
   const [totalViews, setTotalViews] = useState(0);
   const [topLikedBlog, setTopLikedBlog] = useState(null);
   const adminEmails = ["ajua46244@gmail.com", "lisanuljazeerahisan@gmail.com"];
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   const navigate = useNavigate();
 
@@ -41,14 +44,12 @@ const Dashboard = () => {
       const email = currentUser.email;
 
       try {
-        // Register (if new)
         await axios.post(
-          "https://aljazeera-web-my5l.onrender.com/api/users/register",
+          "http://localhost:5000/api/users/register",
           {
             email,
             name: currentUser.displayName || email.split("@")[0],
             photoUrl: currentUser.photoURL || "",
-            password: "firebase-auto", // 🔐 must not be empty!
           },
           {
             headers: {
@@ -57,21 +58,13 @@ const Dashboard = () => {
           }
         );
 
-        // Get full user profile from MongoDB
-        const res = await axios.get(
-          "https://aljazeera-web-my5l.onrender.com/api/users/me",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await axios.get("http://localhost:5000/api/users/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         const backendUser = res.data;
-        const adminEmails = [
-          "ajua46244@gmail.com",
-          "lisanuljazeerahisan@gmail.com",
-        ];
 
         if (backendUser.blocked && !adminEmails.includes(backendUser.email)) {
           toast.error("❌ تم حظرك من استخدام هذا الموقع");
@@ -81,6 +74,26 @@ const Dashboard = () => {
         }
 
         setUser(backendUser);
+
+        if (backendUser?._id) {
+          const userId = backendUser._id;
+          const config = { headers: { Authorization: `Bearer ${token}` } };
+
+          const [followersRes, followingRes] = await Promise.all([
+            axios.get(
+              `http://localhost:5000/api/follow/${userId}/followers`,
+              config
+            ),
+            axios.get(
+              `http://localhost:5000/api/follow/${userId}/following`,
+              config
+            ),
+          ]);
+
+          setFollowersCount(followersRes.data.followers || 0);
+          setFollowingCount(followingRes.data.following || 0);
+        }
+
         await fetchUserBlogs(email);
         setLoading(false);
       } catch (err) {
@@ -97,17 +110,15 @@ const Dashboard = () => {
   const fetchUserBlogs = async (email) => {
     try {
       const res = await axios.get(
-        `https://aljazeera-web-my5l.onrender.com/api/blogs/user?email=${email}`
+        `http://localhost:5000/api/blogs/user?email=${email}`
       );
       const data = res.data;
 
       setBlogs(data);
 
-      // Total views
       const views = data.reduce((sum, blog) => sum + (blog.views || 0), 0);
       setTotalViews(views);
 
-      // Top liked blog
       const mostLiked = data.reduce((max, blog) => {
         const likes = blog.likes?.length || 0;
         const maxLikes = max.likes?.length || 0;
@@ -130,17 +141,28 @@ const Dashboard = () => {
   };
 
   const handleDeleteBlog = async (blogId) => {
-    if (window.confirm("هل أنت متأكد من حذف هذه المقالة؟")) {
-      try {
-        await axios.delete(
-          `https://aljazeera-web-my5l.onrender.com/api/blogs/${blogId}`
-        );
-        setBlogs(blogs.filter((blog) => blog._id !== blogId));
-        fetchUserBlogs(user.email);
-      } catch (err) {
-        console.error("🚫 Failed to delete blog:", err.response?.data || err);
-        setError("حدث خطأ أثناء حذف المقالة");
-      }
+    if (!window.confirm("هل أنت متأكد من حذف هذه المقالة؟")) return;
+
+    try {
+      // ✅ Get current Firebase token
+      const token = await auth.currentUser.getIdToken(true);
+
+      // ✅ Include token in headers
+      await axios.delete(`http://localhost:5000/api/blogs/${blogId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // Update UI
+      setBlogs(blogs.filter((blog) => blog._id !== blogId));
+      fetchUserBlogs(user.email);
+    } catch (err) {
+      console.error(
+        "🚫 Failed to delete blog:",
+        err.response?.data || err.message
+      );
+      setError("حدث خطأ أثناء حذف المقالة");
     }
   };
 
@@ -238,7 +260,7 @@ const Dashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="my-8 grid grid-cols-1 md:grid-cols-3 gap-5"
+          className="my-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5"
         >
           <motion.div
             whileHover={{ y: -5 }}
@@ -257,15 +279,44 @@ const Dashboard = () => {
                 <FiEye className="text-xl" />
               </div>
             </div>
-            <div className="mt-3 h-1 bg-green-100 rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: "100%" }}
-                transition={{ duration: 1 }}
-                className="h-full bg-gradient-to-r from-green-400 to-emerald-500"
-              />
+          </motion.div>
+
+          <motion.div
+            whileHover={{ y: -5 }}
+            className="bg-gradient-to-br from-blue-50 to-white p-5 rounded-2xl shadow-sm border border-blue-100 hover:shadow-md transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-1">
+                  المتابعون
+                </p>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  {followersCount}
+                </h3>
+              </div>
+              <div className="p-3 rounded-full bg-blue-100 text-blue-600">
+                <FiUser className="text-xl" />
+              </div>
             </div>
           </motion.div>
+
+          <motion.div
+            whileHover={{ y: -5 }}
+            className="bg-gradient-to-br from-purple-50 to-white p-5 rounded-2xl shadow-sm border border-purple-100 hover:shadow-md transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-1">يتابع</p>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  {followingCount}
+                </h3>
+              </div>
+              <div className="p-3 rounded-full bg-purple-100 text-purple-600">
+                <FiUsers className="text-xl" />
+              </div>
+            </div>
+          </motion.div>
+
           {topLikedBlog && (
             <motion.div
               whileHover={{ y: -5 }}
@@ -291,13 +342,13 @@ const Dashboard = () => {
                 <span className="text-sm text-pink-600 font-medium">
                   {topLikedBlog.likes?.length || 0} إعجاب
                 </span>
-                <motion.div
-                  whileHover={{ x: 5 }}
+                <Link
+                  to={`/blog/${topLikedBlog.slug}`}
                   className="text-pink-600 flex items-center text-sm font-medium"
                 >
                   <span>عرض المقال</span>
                   <FiChevronRight className="mr-1" />
-                </motion.div>
+                </Link>
               </div>
             </motion.div>
           )}
@@ -426,7 +477,6 @@ const Dashboard = () => {
                             {blog.likes?.length || 0} إعجاب
                           </span>
                         </div>
-                        {/* THE FIX IS APPLIED ON THE LINE BELOW */}
                         <p className="text-gray-700 line-clamp-2 mb-4 break-words">
                           {blog.content.replace(/<[^>]+>/g, "")}
                         </p>

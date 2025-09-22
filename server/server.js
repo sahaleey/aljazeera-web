@@ -7,6 +7,7 @@ require("dotenv").config();
 const blogRoutes = require("./routes/blogRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const userRoutes = require("./routes/userRoutes");
+const followRoute = require("./routes/followRoute");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,6 +27,7 @@ app.use(express.json());
 app.use("/api/blogs", blogRoutes);
 app.use("/api/users", adminRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/follow", followRoute);
 
 // ✅ Home route
 app.get("/", (req, res) => {

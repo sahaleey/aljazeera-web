@@ -4,15 +4,17 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import logo from "../assets/image/logo draw.png"; // Adjust path if needed
 
+const stripHtml = (html) => {
+  return html.replace(/<[^>]+>/g, "") || "";
+};
+
 const Home = () => {
   const [blogs, setBlogs] = useState([]);
 
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const res = await axios.get(
-          "https://aljazeera-web-my5l.onrender.com/api/blogs"
-        );
+        const res = await axios.get("http://localhost:5000/api/blogs");
         setBlogs(res.data);
       } catch (err) {
         console.error("Failed to fetch blogs:", err);
@@ -48,7 +50,6 @@ const Home = () => {
       style={{ fontFamily: "tajawal, sans-serif" }}
     >
       {/* Hero Section */}
-
       <motion.section
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -57,28 +58,22 @@ const Home = () => {
       >
         <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-green-300 rounded-full opacity-10"></div>
         <div className="absolute -top-20 -left-20 w-64 h-64 bg-green-400 rounded-full opacity-10"></div>
-
         <div className="relative z-10 text-center">
-          {/* 🔰 LOGO IMAGE */}
-
           <img
             src={logo}
             alt="Lisanul Jazeera Logo"
-            className="mx-auto mb-6 w-24 h-14 scale-300 object-contain  rounded-4xl "
+            className="mx-auto mb-6 w-24 h-14 scale-300 object-contain rounded-4xl"
           />
-
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-relaxed">
             مرحباً بكم في{" "}
             <span className="bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
               القرطاسية
             </span>
           </h1>
-
           <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto leading-relaxed">
             منصة عربية تقدم محتوى تعليمي وثقافي مميز وملهم للطلاب في جميع
             المراحل الدراسية.
           </p>
-
           <div className="flex flex-wrap gap-4 justify-center">
             <Link
               to="/submit"
@@ -95,6 +90,7 @@ const Home = () => {
           </div>
         </div>
       </motion.section>
+
       {/* Blog Previews */}
       <section className="mb-16">
         <motion.h2
@@ -107,7 +103,6 @@ const Home = () => {
           <span className="absolute bottom-0 right-0 w-full h-1 bg-gradient-to-r from-green-300 to-green-100 rounded-full"></span>
           📝 أحدث المقالات
         </motion.h2>
-
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -132,7 +127,7 @@ const Home = () => {
                   {blog.title}
                 </h3>
                 <p className="text-gray-600 mb-4 leading-relaxed flex-grow">
-                  {blog.content?.slice(0, 100)}...
+                  {stripHtml(blog.content).slice(0, 100)}...
                 </p>
                 <Link
                   to={`/blog/${blog.slug}`}
@@ -148,6 +143,7 @@ const Home = () => {
           ))}
         </motion.div>
       </section>
+
       {/* About Section */}
       <motion.section
         initial={{ opacity: 0 }}
@@ -185,7 +181,6 @@ const Home = () => {
               المكان الذي يلتقي فيه شغف اللغة العربية بالأدب، القصّة، الشعر،
               والتاريخ الإسلامي.
             </p>
-
             <h2 className="text-3xl md:text-4xl font-bold text-green-800 mb-6 pb-2 inline-block relative">
               <span className="absolute bottom-0 right-0 w-full h-1 bg-gradient-to-r from-green-300 to-green-100 rounded-full"></span>
               🎓 مهمتنا
@@ -197,7 +192,6 @@ const Home = () => {
                 </strong>
                 ، لبناء متحدثين واثقين وأصيلين يتحدثون عن الإسلام بلغته ✨
               </li>
-
               <li className="text-xl">
                 <strong className="text-cyan-700">إبراز تراث الجزيرة</strong> من
                 لغة وأدب وعلوم إسلامية كلاسيكية• 📚
@@ -231,6 +225,7 @@ const Home = () => {
           </div>
         </div>
       </motion.section>
+
       {/* CTA Section */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}

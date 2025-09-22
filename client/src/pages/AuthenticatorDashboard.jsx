@@ -82,7 +82,7 @@ const AuthenticatorDashboard = () => {
         const token = await currentUser.getIdToken(true);
 
         await axios.post(
-          "https://aljazeera-web-my5l.onrender.com/api/users/register",
+          "http://localhost:5000/api/users/register",
           {
             email: currentUser.email,
             name: currentUser.displayName || currentUser.email.split("@")[0],
@@ -114,14 +114,11 @@ const AuthenticatorDashboard = () => {
   const fetchCommunityPoints = async (token) => {
     setLoading((prev) => ({ ...prev, points: true }));
     try {
-      const res = await axios.get(
-        "https://aljazeera-web-my5l.onrender.com/api/blogs/points",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await axios.get("http://localhost:5000/api/blogs/points", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setCommunityPoints(res.data);
       notify.info("✅ تم تحميل نقاط المجتمعات");
     } catch (err) {
@@ -144,7 +141,7 @@ const AuthenticatorDashboard = () => {
     try {
       const token = await user.getIdToken();
       const res = await axios.put(
-        `https://aljazeera-web-my5l.onrender.com/api/users/blogs/verify/${id}`,
+        `http://localhost:5000/api/users/blogs/verify/${id}`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -169,12 +166,9 @@ const AuthenticatorDashboard = () => {
   const checkBlocked = async (currentUser) => {
     try {
       const token = await currentUser.getIdToken(true);
-      const res = await axios.get(
-        "https://aljazeera-web-my5l.onrender.com/api/users/me",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await axios.get("http://localhost:5000/api/users/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (res.data.blocked) {
         notify.error("تم حظرك من استخدام هذا الموقع");
@@ -190,12 +184,9 @@ const AuthenticatorDashboard = () => {
   const fetchUsers = async (token) => {
     setLoading((prev) => ({ ...prev, users: true }));
     try {
-      const res = await axios.get(
-        "https://aljazeera-web-my5l.onrender.com/api/users",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await axios.get("http://localhost:5000/api/users", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setUsers(res.data);
 
       const blockedCount = res.data.filter((u) => u.blocked).length;
@@ -218,12 +209,9 @@ const AuthenticatorDashboard = () => {
   const fetchBlogs = async (token) => {
     setLoading((prev) => ({ ...prev, blogs: true }));
     try {
-      const res = await axios.get(
-        "https://aljazeera-web-my5l.onrender.com/api/blogs",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await axios.get("http://localhost:5000/api/blogs", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setBlogs(res.data);
       setStats((prev) => ({ ...prev, totalBlogs: res.data.length }));
       notify.info("تم تحديث المقالات");
@@ -242,7 +230,7 @@ const AuthenticatorDashboard = () => {
       const userToUpdate = users.find((u) => u._id === id);
 
       await axios.put(
-        `https://aljazeera-web-my5l.onrender.com/api/users/block/${id}`,
+        `http://localhost:5000/api/users/block/${id}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -269,12 +257,9 @@ const AuthenticatorDashboard = () => {
       const token = await user.getIdToken();
       const blogToDelete = blogs.find((b) => b._id === id);
 
-      await axios.delete(
-        `https://aljazeera-web-my5l.onrender.com/api/blogs/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.delete(`http://localhost:5000/api/blogs/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       await fetchBlogs(token);
       notify.success(`تم حذف مقال "${blogToDelete.title}"`);

@@ -74,9 +74,7 @@ const CommunityPoints = () => {
       setLoading(true);
       await controls.start("animate");
 
-      const res = await axios.get(
-        "https://aljazeera-web-my5l.onrender.com/api/blogs/points"
-      );
+      const res = await axios.get("http://localhost:5000/api/blogs/points");
       const grouped = {};
 
       if (res.data && typeof res.data === "object") {

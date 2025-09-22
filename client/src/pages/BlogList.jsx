@@ -6,8 +6,121 @@ import { FiEye, FiHeart, FiThumbsDown, FiSearch, FiStar } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import { getAuth } from "firebase/auth";
 
-// This component defines the look of the placeholder card
+const ADMIN_EMAIL = ["ajua46244@gmail.com", "lisanuljazeerahisan@gmail.com"];
+
+// --- REUSABLE COMPONENT for a single article card ---
+const ArticleCard = ({
+  article,
+  index,
+  userEmail,
+  handleLike,
+  handleDislike,
+  handleReadMoreClick,
+}) => (
+  <motion.div
+    key={article._id}
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.3, delay: index * 0.1 }}
+    whileHover={{
+      y: -10,
+      boxShadow:
+        "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+    }}
+    className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300 group flex flex-col"
+  >
+    <div className="p-6 h-full flex flex-col">
+      <div className="flex justify-between items-center mb-3">
+        <span
+          className={`px-3 py-1 rounded-full text-sm font-medium ${
+            article.category === "التعليم"
+              ? "bg-blue-100 text-blue-800"
+              : article.category === "الأشعار"
+              ? "bg-purple-100 text-purple-800"
+              : article.category === "قصص الأطفال"
+              ? "bg-pink-100 text-pink-800"
+              : "bg-yellow-100 text-yellow-800"
+          }`}
+        >
+          {article.category}
+        </span>
+        {ADMIN_EMAIL.includes(article.email) && (
+          <span className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold bg-amber-100 text-amber-800">
+            <FiStar className="text-amber-500" />
+            إشراف
+          </span>
+        )}
+      </div>
+      <div className="flex-grow">
+        <h3 className="text-xl font-bold my-2 text-gray-800">
+          {article.title}
+        </h3>
+        {article.category === "الأشعار" ? (
+          <div className="text-gray-600 mb-4 whitespace-pre-line line-clamp-4 text-sm font-[Amiri]">
+            {article.content.split("\n").slice(0, 4).join("\n")}
+            {article.content.split("\n").length > 4 ? "..." : ""}
+          </div>
+        ) : (
+          <p className="text-gray-600 mb-4 line-clamp-3">
+            {article.content.replace(/<[^>]+>/g, "").slice(0, 100)}...
+          </p>
+        )}
+      </div>
+      <div className="mt-auto pt-4 border-t border-gray-100">
+        <div className="flex justify-between items-center text-sm text-gray-600 mb-3">
+          <div className="flex items-center gap-1">
+            <FiEye className="text-green-600" />
+            <span>{article.views || 0} مشاهدة</span>
+          </div>
+          <span className="text-xs text-gray-500">
+            {new Date(article.createdAt).toLocaleDateString("ar-EG")}
+          </span>
+        </div>
+        <div className="flex justify-between items-center">
+          <div className="flex gap-3">
+            <motion.button
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => handleLike(article.slug)}
+              disabled={!userEmail || article.email === userEmail}
+              className={`flex items-center gap-1 ${
+                article.likes?.includes(userEmail)
+                  ? "text-pink-600"
+                  : "text-gray-500 hover:text-pink-600"
+              } disabled:opacity-50 transition-colors`}
+            >
+              <FiHeart className="text-lg" />
+              <span>{article.likes?.length || 0}</span>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => handleDislike(article.slug)}
+              disabled={!userEmail || article.email === userEmail}
+              className={`flex items-center gap-1 ${
+                article.dislikes?.includes(userEmail)
+                  ? "text-red-600"
+                  : "text-gray-500 hover:text-red-600"
+              } disabled:opacity-50 transition-colors`}
+            >
+              <FiThumbsDown className="text-lg" />
+              <span>{article.dislikes?.length || 0}</span>
+            </motion.button>
+          </div>
+          <button
+            onClick={() => handleReadMoreClick(article.slug)}
+            className="text-green-600 hover:text-green-800 font-medium group"
+          >
+            <span className="group-hover:underline">اقرأ المزيد</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </motion.div>
+);
+
 const SkeletonCard = () => (
   <div className="bg-white rounded-2xl shadow-lg p-6">
     <div className="flex justify-between items-center mb-3">
@@ -31,8 +144,6 @@ const BlogList = ({ userEmail }) => {
   const [isBlocked, setIsBlocked] = useState(false);
   const navigate = useNavigate();
 
-  const ADMIN_EMAIL = ["ajua46244@gmail.com", "lisanuljazeerahisan@gmail.com"];
-
   const categories = [
     "الكل",
     "التعليم",
@@ -44,53 +155,41 @@ const BlogList = ({ userEmail }) => {
 
   useEffect(() => {
     const fetchArticles = async () => {
-      setLoading(true); // Start loading to show skeletons
+      setLoading(true);
       try {
         if (userEmail) {
           const userRes = await axios.get(
-            `https://aljazeera-web-my5l.onrender.com/api/users/status/${userEmail}`
+            `http://localhost:5000/api/users/status/${userEmail}`
           );
           const isUserBlocked = userRes.data.blocked;
           const isAdmin = ADMIN_EMAIL.includes(userEmail);
-
           if (isUserBlocked && !isAdmin) {
             setIsBlocked(true);
             return;
           }
         }
-
-        const blogRes = await axios.get(
-          "https://aljazeera-web-my5l.onrender.com/api/blogs"
-        );
-
-        const sortedArticles = blogRes.data.sort((a, b) => {
-          const isAdminA = ADMIN_EMAIL.includes(a.email);
-          const isAdminB = ADMIN_EMAIL.includes(b.email);
-
-          if (isAdminA && !isAdminB) return -1;
-          if (!isAdminA && isAdminB) return 1;
-
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        });
-
-        setArticles(sortedArticles);
+        const blogRes = await axios.get("http://localhost:5000/api/blogs");
+        setArticles(blogRes.data);
       } catch (err) {
         console.error("❌ Error fetching data:", err);
         toast.error("حدث خطأ أثناء تحميل المقالات");
       } finally {
-        setLoading(false); // Stop loading, whether it succeeded or failed
+        setLoading(false);
       }
     };
-
     fetchArticles();
   }, [userEmail]);
 
   const handleLike = async (slug) => {
     if (!userEmail) return navigate("/login");
     try {
+      const token = await getAuth().currentUser.getIdToken();
       const res = await axios.patch(
-        `https://aljazeera-web-my5l.onrender.com/api/blogs/like/${slug}`,
-        { email: userEmail }
+        `http://localhost:5000/api/blogs/like/${slug}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       setArticles((prev) =>
         prev.map((a) =>
@@ -101,15 +200,20 @@ const BlogList = ({ userEmail }) => {
       );
     } catch (err) {
       console.error("Error liking blog:", err);
+      toast.error("فشل في الإعجاب بالمقال، حاول مرة أخرى");
     }
   };
 
   const handleDislike = async (slug) => {
     if (!userEmail) return navigate("/login");
     try {
+      const token = await getAuth().currentUser.getIdToken();
       const res = await axios.patch(
-        `https://aljazeera-web-my5l.onrender.com/api/blogs/dislike/${slug}`,
-        { email: userEmail }
+        `http://localhost:5000/api/blogs/dislike/${slug}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       setArticles((prev) =>
         prev.map((a) =>
@@ -120,13 +224,14 @@ const BlogList = ({ userEmail }) => {
       );
     } catch (err) {
       console.error("Error disliking blog:", err);
+      toast.error("فشل في كره المقال، حاول مرة أخرى");
     }
   };
 
   const handleView = async (slug) => {
     try {
       const res = await axios.patch(
-        `https://aljazeera-web-my5l.onrender.com/api/blogs/view/${slug}`,
+        `http://localhost:5000/api/blogs/view/${slug}`,
         { email: userEmail }
       );
       setArticles((prev) =>
@@ -147,27 +252,34 @@ const BlogList = ({ userEmail }) => {
     navigate(`/blog/${slug}`);
   };
 
-  const filteredArticles = articles.filter((article) => {
-    const matchesCategory =
-      activeCategory === "الكل" || article.category === activeCategory;
-    const plainTextContent = article.content?.replace(/<[^>]+>/g, "") || "";
-    const matchesSearch =
-      article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      plainTextContent.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const filteredArticles = articles
+    .filter((article) => {
+      const matchesCategory =
+        activeCategory === "الكل" || article.category === activeCategory;
+      const plainTextContent = article.content?.replace(/<[^>]+>/g, "") || "";
+      const matchesSearch =
+        article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        plainTextContent.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    })
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  const adminArticles = filteredArticles.filter((article) =>
+    ADMIN_EMAIL.includes(article.email)
+  );
+  const regularArticles = filteredArticles.filter(
+    (article) => !ADMIN_EMAIL.includes(article.email)
+  );
 
   if (isBlocked) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-red-50 text-center px-4">
         <div className="bg-white p-8 rounded-xl shadow-lg border border-red-200 max-w-lg">
           <h2 className="text-2xl font-bold text-red-600 mb-4">🚫 تم الحظر</h2>
-
           <p className="text-gray-600 mb-6">
             لقد تم حظرك من استخدام هذا القسم. إذا كنت تعتقد أن هذا تم عن طريق
             الخطأ، يرجى التواصل مع الإدارة.
           </p>
-
           <button
             onClick={() => navigate("/home")}
             className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
@@ -188,7 +300,6 @@ const BlogList = ({ userEmail }) => {
         className="text-right px-4 md:px-8 lg:px-12 py-8 font-[sans-serif] bg-gradient-to-b from-green-50 to-white min-h-screen"
         style={{ fontFamily: "tajawal, sans-serif" }}
       >
-        {/* Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -219,7 +330,6 @@ const BlogList = ({ userEmail }) => {
           </div>
         </motion.div>
 
-        {/* Filter & Search Section */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -257,150 +367,94 @@ const BlogList = ({ userEmail }) => {
           </div>
         </motion.div>
 
-        {/* Articles Grid Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {loading ? (
-            // If loading, show the skeleton cards
-            Array.from({ length: 6 }).map((_, index) => (
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {Array.from({ length: 6 }).map((_, index) => (
               <SkeletonCard key={index} />
-            ))
-          ) : // Otherwise, show the articles or the 'not found' message
-          filteredArticles.length > 0 ? (
-            filteredArticles.map((article, index) => (
-              <motion.div
-                key={article._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-                whileHover={{
-                  y: -10,
-                  boxShadow:
-                    "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-                }}
-                className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300 group flex flex-col"
-              >
-                <div className="p-6 h-full flex flex-col">
-                  <div className="flex justify-between items-center mb-3">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        article.category === "التعليم"
-                          ? "bg-blue-100 text-blue-800"
-                          : article.category === "الأشعار"
-                          ? "bg-purple-100 text-purple-800"
-                          : article.category === "قصص الأطفال"
-                          ? "bg-pink-100 text-pink-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {article.category}
-                    </span>
-                    {ADMIN_EMAIL.includes(article.email) && (
-                      <span className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold bg-amber-100 text-amber-800">
-                        <FiStar className="text-amber-500" />
-                        إشراف
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex-grow">
-                    <h3 className="text-xl font-bold my-2 text-gray-800">
-                      {article.title}
-                    </h3>
-                    {article.category === "الأشعار" ? (
-                      <div className="text-gray-600 mb-4 whitespace-pre-line line-clamp-4 text-sm font-[Amiri]">
-                        {article.content.split("\n").slice(0, 4).join("\n")}
-                        {article.content.split("\n").length > 4 ? "..." : ""}
-                      </div>
-                    ) : (
-                      <p className="text-gray-600 mb-4 line-clamp-3">
-                        {article.content.replace(/<[^>]+>/g, "").slice(0, 100)}
-                        ...
-                      </p>
-                    )}
-                  </div>
-                  <div className="mt-auto pt-4 border-t border-gray-100">
-                    <div className="flex justify-between items-center text-sm text-gray-600 mb-3">
-                      <div className="flex items-center gap-1">
-                        <FiEye className="text-green-600" />
-                        <span>{article.views || 0} مشاهدة</span>
-                      </div>
-                      <span className="text-xs text-gray-500">
-                        {new Date(article.createdAt).toLocaleDateString(
-                          "ar-EG"
-                        )}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div className="flex gap-3">
-                        <motion.button
-                          whileHover={{ scale: 1.2 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleLike(article.slug)}
-                          disabled={!userEmail || article.email === userEmail}
-                          className={`flex items-center gap-1 ${
-                            article.likes?.includes(userEmail)
-                              ? "text-pink-600"
-                              : "text-gray-500 hover:text-pink-600"
-                          } disabled:opacity-50 transition-colors`}
-                        >
-                          <FiHeart className="text-lg" />
-                          <span>{article.likes?.length || 0}</span>
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.2 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleDislike(article.slug)}
-                          disabled={!userEmail || article.email === userEmail}
-                          className={`flex items-center gap-1 ${
-                            article.dislikes?.includes(userEmail)
-                              ? "text-red-600"
-                              : "text-gray-500 hover:text-red-600"
-                          } disabled:opacity-50 transition-colors`}
-                        >
-                          <FiThumbsDown className="text-lg" />
-                          <span>{article.dislikes?.length || 0}</span>
-                        </motion.button>
-                      </div>
-                      <button
-                        onClick={() => handleReadMoreClick(article.slug)}
-                        className="text-green-600 hover:text-green-800 font-medium group"
-                      >
-                        <span className="group-hover:underline">
-                          اقرأ المزيد
-                        </span>
-                      </button>
-                    </div>
-                  </div>
+            ))}
+          </div>
+        ) : (
+          <div>
+            {adminArticles.length > 0 && (
+              <section className="mb-12">
+                <div className="pb-4 mb-6 border-b-2 border-amber-300">
+                  <h2 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                    <FiStar className="text-amber-500" />
+                    مقالات مميزة من الإشراف
+                  </h2>
                 </div>
-              </motion.div>
-            ))
-          ) : (
-            <div className="col-span-full">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-white rounded-2xl shadow-xl p-8 text-center"
-              >
-                <h3 className="text-xl font-bold text-gray-700 mb-2">
-                  لا توجد مقالات متاحة
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  لم يتم العثور على مقالات تطابق معايير البحث الخاصة بك
-                </p>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    setActiveCategory("الكل");
-                    setSearchQuery("");
-                  }}
-                  className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {adminArticles.map((article, index) => (
+                    <ArticleCard
+                      key={article._id}
+                      article={article}
+                      index={index}
+                      userEmail={userEmail}
+                      handleLike={handleLike}
+                      handleDislike={handleDislike}
+                      handleReadMoreClick={handleReadMoreClick}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {adminArticles.length > 0 && regularArticles.length > 0 && (
+              <hr className="my-10 border-gray-200 border-dashed" />
+            )}
+
+            {regularArticles.length > 0 && (
+              <section>
+                <div className="pb-4 mb-6">
+                  <h2 className="text-3xl font-bold text-gray-800">
+                    آخر المشاركات
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {regularArticles.map((article, index) => (
+                    <ArticleCard
+                      key={article._id}
+                      article={article}
+                      index={index}
+                      userEmail={userEmail}
+                      handleLike={handleLike}
+                      handleDislike={handleDislike}
+                      handleReadMoreClick={handleReadMoreClick}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {filteredArticles.length === 0 && (
+              <div className="col-span-full">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-white rounded-2xl shadow-xl p-8 text-center"
                 >
-                  عرض جميع المقالات
-                </motion.button>
-              </motion.div>
-            </div>
-          )}
-        </div>
+                  <h3 className="text-xl font-bold text-gray-700 mb-2">
+                    لا توجد مقالات متاحة
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    لم يتم العثور على مقالات تطابق معايير البحث الخاصة بك
+                  </p>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      setActiveCategory("الكل");
+                      setSearchQuery("");
+                    }}
+                    className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                  >
+                    عرض جميع المقالات
+                  </motion.button>
+                </motion.div>
+              </div>
+            )}
+          </div>
+        )}
       </motion.div>
     </SkeletonTheme>
   );

@@ -18,14 +18,11 @@ const Navbar = () => {
 
       try {
         const token = await currentUser.getIdToken(true);
-        const res = await axios.get(
-          "https://aljazeera-web-my5l.onrender.com/api/users/me",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await axios.get("http://localhost:5000/api/users/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         setUser(res.data);
       } catch (error) {
         console.error("Error fetching user from backend:", error);

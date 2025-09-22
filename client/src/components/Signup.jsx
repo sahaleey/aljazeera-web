@@ -31,32 +31,26 @@ export default function Signup() {
       const token = await user.getIdToken();
 
       // 📮 Backend registration
-      const res = await fetch(
-        "https://aljazeera-web-my5l.onrender.com/api/users/register",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            email: user.email,
-            name: user.displayName || user.email.split("@")[0],
-            photoUrl: user.photoURL || "",
-            password, // ✅ this line is important
-          }),
-        }
-      );
+      const res = await fetch("http://localhost:5000/api/users/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          email: user.email,
+          name: user.displayName || user.email.split("@")[0],
+          photoUrl: user.photoURL || "",
+          password, // ✅ this line is important
+        }),
+      });
 
       if (!res.ok) throw new Error("فشل التسجيل في السيرفر");
 
       // 🛑 Block check
-      const blockRes = await fetch(
-        "https://aljazeera-web-my5l.onrender.com/api/users/me",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const blockRes = await fetch("http://localhost:5000/api/users/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const userData = await blockRes.json();
 
@@ -85,29 +79,23 @@ export default function Signup() {
       const cred = await signInWithPopup(auth, provider);
       const token = await cred.user.getIdToken();
 
-      await fetch(
-        "https://aljazeera-web-my5l.onrender.com/api/users/register",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            email: cred.user.email,
-            photoUrl: cred.user.photoURL || "",
-            name: cred.user.displayName || cred.user.email.split("@")[0],
-            password: "google", // ✅ To satisfy backend password requirement
-          }),
-        }
-      );
+      await fetch("http://localhost:5000/api/users/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          email: cred.user.email,
+          photoUrl: cred.user.photoURL || "",
+          name: cred.user.displayName || cred.user.email.split("@")[0],
+          password: "google", // ✅ To satisfy backend password requirement
+        }),
+      });
 
-      const blockRes = await fetch(
-        "https://aljazeera-web-my5l.onrender.com/api/users/me",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const blockRes = await fetch("http://localhost:5000/api/users/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const userData = await blockRes.json();
 

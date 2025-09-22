@@ -2,6 +2,9 @@ import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
+import CommentSectionToggle from "../components/CommentSectionToggle";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../firebase";
 import {
   FiClock,
   FiUser,
@@ -11,7 +14,7 @@ import {
 } from "react-icons/fi";
 import { FaRegNewspaper } from "react-icons/fa";
 import { MdAdminPanelSettings } from "react-icons/md";
-import DOMPurify from "dompurify"; // Import the sanitizer
+import DOMPurify from "dompurify";
 import { Helmet } from "react-helmet-async";
 
 const ArticlePage = () => {
@@ -20,51 +23,134 @@ const ArticlePage = () => {
   const [loading, setLoading] = useState(true);
   const [related, setRelated] = useState([]);
   const [userPhoto, setUserPhoto] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [token, setToken] = useState(null);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(false);
 
+  // --- OPTIMIZED DATA FETCHING ---
   useEffect(() => {
-    const fetchArticle = async () => {
+    const fetchArticleData = async () => {
       try {
-        // 1. Fetch blog data
-        const res = await axios.get(
-          `https://aljazeera-web-my5l.onrender.com/api/blogs/${slug}`
-        );
+        // Step 1: Fetch the main article first. This is the only blocking request.
+        const res = await axios.get(`http://localhost:5000/api/blogs/${slug}`);
         const blog = res.data;
         setArticle(blog);
 
-        // 2. Fetch author profile (photoUrl) using email
-        if (blog?.email) {
-          try {
-            const userRes = await axios.get(
-              `https://aljazeera-web-my5l.onrender.com/api/users/${blog.email}`
-            );
-            if (userRes.data?.photoUrl) {
-              setUserPhoto(userRes.data.photoUrl);
-            }
-          } catch (userErr) {
-            console.warn("⚠️ Could not fetch author photo:", userErr.message);
-          }
-        }
+        // Step 2: Once we have the blog, we can fetch all other data in parallel.
+        if (blog?.authorId && blog?.email && blog?.category) {
+          const promises = [
+            axios.get(`http://localhost:5000/api/users/${blog.email}`),
+            axios.get(
+              `http://localhost:5000/api/blogs?category=${blog.category}`
+            ),
+            axios.get(
+              `http://localhost:5000/api/follow/${blog.authorId}/followers`
+            ),
+            axios.get(
+              `http://localhost:5000/api/follow/${blog.authorId}/following`
+            ),
+          ];
 
-        // 3. Fetch related blogs
-        const relatedRes = await axios.get(
-          `https://aljazeera-web-my5l.onrender.com/api/blogs?category=${blog.category}`
-        );
-        const filteredRelated = relatedRes.data.filter((a) => a.slug !== slug);
-        setRelated(filteredRelated.slice(0, 3));
+          // Promise.all runs all requests at the same time for max speed.
+          const [userRes, relatedRes, followersRes, followingRes] =
+            await Promise.all(promises);
+
+          // Step 3: Set state with all the fetched data.
+          if (userRes.data?.photoUrl) setUserPhoto(userRes.data.photoUrl);
+          setRelated(
+            relatedRes.data.filter((a) => a.slug !== slug).slice(0, 3)
+          );
+          setFollowersCount(followersRes.data.followers || 0);
+          setFollowingCount(followingRes.data.following || 0);
+        }
       } catch (err) {
-        console.error("Blog not found", err);
+        console.error("Failed to fetch article data:", err);
+        setArticle(null); // Set article to null on error to show the "Not Found" page
       } finally {
         setLoading(false);
       }
     };
 
-    fetchArticle();
+    fetchArticleData();
 
-    // Note: The Firebase auth listener here doesn't seem to be used for displaying
-    // the article, so its logic can remain as is.
+    // Firebase auth listener remains the same.
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setCurrentUser(user);
+        const userToken = await user.getIdToken();
+        setToken(userToken);
+      } else {
+        setCurrentUser(null);
+        setToken(null);
+      }
+    });
+
+    return () => unsubscribe();
   }, [slug]);
 
-  if (loading) {
+  // Check if current user follows this author (runs after initial data is loaded)
+  useEffect(() => {
+    if (!article?.authorId || !currentUser || !token) return;
+
+    const checkFollowingStatus = async () => {
+      try {
+        const res = await axios.get(
+          `http://localhost:5000/api/follow/check/${article.authorId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setIsFollowing(res.data.isFollowing);
+      } catch (err) {
+        console.warn("Could not check following status:", err);
+      }
+    };
+
+    checkFollowingStatus();
+  }, [article, currentUser, token]);
+
+  // --- BULLETPROOF FOLLOW/UNFOLLOW HANDLER ---
+  const toggleFollow = async () => {
+    if (!currentUser) return alert("يجب تسجيل الدخول للمتابعة");
+    if (!article?.authorId || !token)
+      return console.warn("Author ID or token not found");
+
+    // 1. Store the original state before the API call for potential rollback.
+    const originalIsFollowing = isFollowing;
+    const originalFollowersCount = followersCount;
+
+    // 2. Optimistically update the UI for a snappy user experience.
+    setIsFollowing(!originalIsFollowing);
+    setFollowersCount((prev) => prev + (originalIsFollowing ? -1 : 1));
+
+    try {
+      const url = `http://localhost:5000/api/follow/${article.authorId}`;
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+
+      // 3. Use the correct HTTP method based on the action.
+      if (originalIsFollowing) {
+        // Use DELETE for unfollowing
+        await axios.delete(`${url}/unfollow`, config);
+      } else {
+        // Use POST for following
+        await axios.post(`${url}/follow`, {}, config);
+      }
+    } catch (err) {
+      console.error(
+        "Failed to update follow status. Reverting UI.",
+        err.response?.data || err
+      );
+
+      // 4. If the API call fails, revert the UI back to its original state.
+      setIsFollowing(originalIsFollowing);
+      setFollowersCount(originalFollowersCount);
+      alert("حدث خطأ ما، يرجى المحاولة مرة أخرى");
+    }
+  };
+
+  // --- RENDER LOGIC (No changes here) ---
+
+  if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center font-[tajawal,sans-serif]">
         <motion.div
@@ -74,9 +160,8 @@ const ArticlePage = () => {
         ></motion.div>
       </div>
     );
-  }
 
-  if (!article) {
+  if (!article)
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-center px-4">
         <motion.div
@@ -100,9 +185,7 @@ const ArticlePage = () => {
         </Link>
       </div>
     );
-  }
 
-  // To get an accurate word count, first strip the HTML tags from the content.
   const plainTextContent = article.content.replace(/<[^>]+>/g, "");
   const wordCount = plainTextContent.split(/\s+/).filter(Boolean).length;
   const readingTime = Math.ceil(wordCount / 200);
@@ -125,8 +208,7 @@ const ArticlePage = () => {
             to="/blogs"
             className="flex items-center text-green-600 hover:text-green-800 font-medium"
           >
-            <FiArrowLeft className="ml-1" />
-            العودة للمقالات
+            <FiArrowLeft className="ml-1" /> العودة للمقالات
           </Link>
         </motion.div>
 
@@ -187,10 +269,9 @@ const ArticlePage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-12"
+          className="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-6"
         >
           {article.category === "الأشعار" ? (
-            // Logic for poems (plain text) remains unchanged
             <div className="text-center space-y-4 font-[Amiri] text-xl text-gray-800 leading-loose">
               {article.content
                 .split("\n")
@@ -202,9 +283,8 @@ const ArticlePage = () => {
                 ))}
             </div>
           ) : (
-            // Logic for articles now safely renders the HTML from the database
             <div
-              className="prose max-w-none text-right break-words" // `prose` styles the HTML, `text-right` ensures correct alignment
+              className="prose max-w-none text-right break-words"
               dangerouslySetInnerHTML={{
                 __html: DOMPurify.sanitize(article.content),
               }}
@@ -212,7 +292,7 @@ const ArticlePage = () => {
           )}
         </motion.div>
 
-        {/* Author Info */}
+        {/* Author Info & Follow */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -236,7 +316,7 @@ const ArticlePage = () => {
               </span>
             )}
           </motion.div>
-          <div className="text-center md:text-right">
+          <div className="text-center md:text-right flex-1">
             <h4 className="font-bold text-xl text-green-800">
               {article.author}
             </h4>
@@ -248,6 +328,22 @@ const ArticlePage = () => {
                 {article.email}
               </a>
             </p>
+            <div className="flex items-center justify-center md:justify-start gap-4 mt-2">
+              <button
+                onClick={toggleFollow}
+                disabled={!currentUser || currentUser.email === article.email}
+                className={`px-4 py-1.5 rounded-full font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isFollowing
+                    ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                    : "bg-green-600 text-white hover:bg-green-700"
+                }`}
+              >
+                {isFollowing ? "إلغاء المتابعة" : "متابعة"}
+              </button>
+              <span className="text-gray-600 text-sm">
+                متابعين {followersCount}
+              </span>
+            </div>
           </div>
         </motion.div>
 
@@ -261,7 +357,7 @@ const ArticlePage = () => {
             className="mb-16"
           >
             <h3 className="text-2xl font-bold text-green-800 mb-6 pb-2 border-b-2 border-green-200 flex items-center gap-2">
-              <FaRegNewspaper className="text-green-600" />
+              <FaRegNewspaper className="text-green-600" />{" "}
               <span>مقالات ذات صلة</span>
             </h3>
             <div className="grid md:grid-cols-3 gap-6">
@@ -282,7 +378,6 @@ const ArticlePage = () => {
                     {item.title}
                   </h4>
                   <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {/* Also strip HTML for the preview text */}
                     {item.content.replace(/<[^>]+>/g, "").substring(0, 100)}...
                   </p>
                   <motion.div whileHover={{ x: -5 }}>
@@ -293,7 +388,10 @@ const ArticlePage = () => {
                       <span>اقرأ المزيد</span>
                       <motion.span
                         animate={{ x: [0, 5, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                        }}
                         className="mr-2"
                       >
                         →
@@ -305,6 +403,20 @@ const ArticlePage = () => {
             </div>
           </motion.div>
         )}
+
+        {/* Comment Section Toggle */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mb-12"
+        >
+          <CommentSectionToggle
+            blogSlug={article.slug}
+            user={currentUser}
+            token={token}
+          />
+        </motion.div>
       </motion.div>
     </>
   );

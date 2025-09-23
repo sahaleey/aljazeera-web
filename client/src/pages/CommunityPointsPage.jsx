@@ -51,7 +51,6 @@ const CommunityPoints = () => {
   const [allZeroPoints, setAllZeroPoints] = useState(false);
 
   const particlesInit = useCallback(async (engine) => {
-    console.log("🌟 tsParticles engine loaded");
     await loadFull(engine);
   }, []);
 

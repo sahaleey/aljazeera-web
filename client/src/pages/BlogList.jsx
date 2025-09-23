@@ -1,8 +1,16 @@
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { FiEye, FiHeart, FiThumbsDown, FiSearch, FiStar } from "react-icons/fi";
+import {
+  FiEye,
+  FiHeart,
+  FiThumbsDown,
+  FiSearch,
+  FiStar,
+  FiBell,
+  FiX,
+} from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -10,7 +18,199 @@ import { getAuth } from "firebase/auth";
 
 const ADMIN_EMAIL = ["ajua46244@gmail.com", "lisanuljazeerahisan@gmail.com"];
 
-// --- REUSABLE COMPONENT for a single article card ---
+const NotificationPanel = ({
+  notifications,
+  onClose,
+  isLoading,
+  onClearAll,
+}) => (
+  <motion.div
+    layout
+    initial={{ opacity: 0, y: -20, scale: 0.95 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    exit={{ opacity: 0, y: -20, scale: 0.95 }}
+    transition={{ duration: 0.2, ease: "easeOut" }}
+    className="absolute top-14 left-0 w-80 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 overflow-hidden"
+  >
+    <div className="flex items-center justify-between p-3 border-b border-gray-100">
+      <h4 className="font-bold text-gray-800">الإشعارات</h4>
+      <div className="flex items-center gap-2">
+        {notifications.length > 0 && (
+          <button
+            onClick={onClearAll}
+            className="text-sm text-red-600 hover:underline"
+          >
+            مسح الكل
+          </button>
+        )}
+        <button
+          onClick={onClose}
+          className="p-1 rounded-full hover:bg-gray-100"
+        >
+          <FiX />
+        </button>
+      </div>
+    </div>
+    <div className="max-h-96 overflow-y-auto">
+      {isLoading ? (
+        <p className="text-gray-500 p-4 text-center">جاري التحميل...</p>
+      ) : notifications.length > 0 ? (
+        <ul>
+          {notifications.map((notif) => (
+            <li key={notif._id}>
+              {notif.blog ? (
+                <Link
+                  to={`/blog/${notif.blog.slug}`}
+                  onClick={onClose}
+                  className={`block p-3 border-b border-gray-100 hover:bg-green-50 transition-colors ${
+                    !notif.isRead ? "bg-green-50" : "bg-white"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <img
+                      src={
+                        notif.sender?.photoUrl ||
+                        `https://avatar.vercel.sh/${
+                          notif.sender?.name || "user"
+                        }.png`
+                      }
+                      alt={notif.sender?.name || "Unknown"}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div>
+                      <p className="text-sm text-gray-700">
+                        <strong className="font-semibold">
+                          {notif.sender?.name || "مستخدم"}
+                        </strong>{" "}
+                        نشر مقالة جديدة:{" "}
+                        <span className="font-bold text-green-700">
+                          {notif.blog.title}
+                        </span>
+                      </p>
+                      <time className="text-xs text-gray-400">
+                        {new Date(notif.createdAt).toLocaleDateString("ar-EG")}
+                      </time>
+                    </div>
+                  </div>
+                </Link>
+              ) : (
+                <div className="p-3 border-b border-gray-100 bg-yellow-50 text-sm text-gray-600">
+                  إشعار غير صالح أو تم حذف المقالة.
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-gray-500 p-4 text-center">لا توجد إشعارات جديدة.</p>
+      )}
+    </div>
+  </motion.div>
+);
+
+const NotificationBell = ({ userEmail }) => {
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!userEmail) return;
+
+    const fetchNotifications = async () => {
+      setIsLoading(true);
+      try {
+        const token = await getAuth().currentUser.getIdToken();
+        const res = await axios.get(
+          `https://aljazeera-web.onrender.com/api/notifications`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setNotifications(res.data);
+        setUnreadCount(res.data.filter((n) => !n.isRead).length);
+      } catch (err) {
+        console.error("Failed to fetch notifications", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, [userEmail]);
+
+  const handleTogglePanel = async () => {
+    setIsPanelOpen((prev) => !prev);
+    if (!isPanelOpen && unreadCount > 0) {
+      try {
+        const token = await getAuth().currentUser.getIdToken();
+        await axios.patch(
+          `https://aljazeera-web.onrender.com/api/notifications/mark-read`,
+          {},
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setUnreadCount(0);
+        setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      } catch (err) {
+        console.error("Failed to mark notifications as read", err);
+      }
+    }
+  };
+
+  // 🚀 NEW: Clear all
+  const handleClearAll = async () => {
+    try {
+      const token = await getAuth().currentUser.getIdToken();
+      await axios.delete(
+        `https://aljazeera-web.onrender.com/api/notifications/clear-all`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setNotifications([]);
+      setUnreadCount(0);
+      toast.success("تم مسح جميع الإشعارات ✅");
+    } catch (err) {
+      console.error("Failed to clear notifications", err);
+      toast.error("فشل في مسح الإشعارات");
+    }
+  };
+
+  return (
+    <div className="relative">
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={handleTogglePanel}
+        className="relative p-3 rounded-full bg-white shadow-md border border-gray-200 text-gray-600 hover:text-green-600"
+      >
+        <FiBell size={24} />
+        {unreadCount > 0 && (
+          <motion.span
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white"
+          >
+            {unreadCount}
+          </motion.span>
+        )}
+      </motion.button>
+      <AnimatePresence>
+        {isPanelOpen && (
+          <NotificationPanel
+            notifications={notifications}
+            onClose={() => setIsPanelOpen(false)}
+            isLoading={isLoading}
+            onClearAll={handleClearAll} // ✅ pass down
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 const ArticleCard = ({
   article,
   index,
@@ -299,9 +499,13 @@ const BlogList = ({ userEmail }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="text-right px-4 md:px-8 lg:px-12 py-8 font-[sans-serif] bg-gradient-to-b from-green-50 to-white min-h-screen"
+        className="relative text-right px-4 md:px-8 lg:px-12 py-8 font-[sans-serif] bg-gradient-to-b from-green-50 to-white min-h-screen"
         style={{ fontFamily: "tajawal, sans-serif" }}
       >
+        <div className="fixed top-20 left-5 z-50">
+          {userEmail && <NotificationBell userEmail={userEmail} />}
+        </div>
+
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

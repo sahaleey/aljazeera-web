@@ -5,8 +5,8 @@ const {
   getFollowers,
   getFollowing,
   checkFollowing,
-  getFollowersList, // --- ADD THIS ---
-  getFollowingList, // --- ADD THIS ---
+  getFollowersList,
+  getFollowingList,
 } = require("../controllers/followController.js");
 const verifyUser = require("../middlewares/verifyUser.js");
 

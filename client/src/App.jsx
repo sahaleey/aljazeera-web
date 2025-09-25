@@ -16,6 +16,7 @@ import AuthenticatorDashboard from "./pages/AuthenticatorDashboard";
 import Signup from "./components/Signup";
 import CommunityPoints from "./pages/CommunityPointsPage";
 import ProfilePage from "./pages/ProfilePage";
+import ReportBugButton from "./components/ReportBugButton"; // 👈 import
 
 function App() {
   const [userEmail, setUserEmail] = useState("");
@@ -29,14 +30,13 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // Hide Navbar and Footer on the IntroScreen route
+  // Hide Navbar, Footer, and Bug Button on IntroScreen
   const hideLayout = location.pathname === "/";
 
   return (
     <div className="">
       <Toaster position="top-left" reverseOrder={false} />
       {!hideLayout && <Navbar userEmail={userEmail} />}
-
       <Routes>
         <Route path="/" element={<IntroScreen />} />
         <Route path="/home" element={<Home />} />
@@ -59,8 +59,8 @@ function App() {
         />
         <Route path="/profile/:email" element={<ProfilePage />} />
       </Routes>
-
       {!hideLayout && <Footer />}
+      {!hideLayout && <ReportBugButton />} {/* 👈 bug button floating */}
     </div>
   );
 }

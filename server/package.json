@@ -5,6 +5,9 @@
   },
   "dependencies": {
     "@auth/core": "^0.40.0",
+    "@sentry/node": "^10.14.0",
+    "@sentry/react": "^10.14.0",
+    "@sentry/tracing": "^7.120.4",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.6.0",

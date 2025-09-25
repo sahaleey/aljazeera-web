@@ -1,7 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import CommentSectionToggle from "../components/CommentSectionToggle";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
@@ -11,9 +11,20 @@ import {
   FiArrowLeft,
   FiBookOpen,
   FiCheckCircle,
+  FiHeart,
+  FiShare2,
+  FiBookmark,
+  FiEye,
+  FiUsers,
+  FiCalendar,
 } from "react-icons/fi";
-import { FaRegNewspaper } from "react-icons/fa";
-import { MdAdminPanelSettings } from "react-icons/md";
+import { FaRegNewspaper, FaQuoteLeft, FaRegCopy } from "react-icons/fa";
+import {
+  MdAdminPanelSettings,
+  MdOutlineVerified,
+  MdOutlineTrendingUp,
+} from "react-icons/md";
+import { IoStatsChart, IoTimeOutline } from "react-icons/io5";
 import DOMPurify from "dompurify";
 import { Helmet } from "react-helmet-async";
 
@@ -28,19 +39,21 @@ const ArticlePage = () => {
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  // --- OPTIMIZED DATA FETCHING ---
+  // Enhanced data fetching with loading states
   useEffect(() => {
     const fetchArticleData = async () => {
       try {
-        // Step 1: Fetch the main article first. This is the only blocking request.
+        setLoading(true);
         const res = await axios.get(
           `https://aljazeera-web.onrender.com/api/blogs/${slug}`
         );
         const blog = res.data;
         setArticle(blog);
 
-        // Step 2: Once we have the blog, we can fetch all other data in parallel.
         if (blog?.authorId && blog?.email && blog?.category) {
           const promises = [
             axios.get(
@@ -57,11 +70,9 @@ const ArticlePage = () => {
             ),
           ];
 
-          // Promise.all runs all requests at the same time for max speed.
           const [userRes, relatedRes, followersRes, followingRes] =
             await Promise.all(promises);
 
-          // Step 3: Set state with all the fetched data.
           if (userRes.data?.photoUrl) setUserPhoto(userRes.data.photoUrl);
           setRelated(
             relatedRes.data.filter((a) => a.slug !== slug).slice(0, 3)
@@ -71,7 +82,7 @@ const ArticlePage = () => {
         }
       } catch (err) {
         console.error("Failed to fetch article data:", err);
-        setArticle(null); // Set article to null on error to show the "Not Found" page
+        setArticle(null);
       } finally {
         setLoading(false);
       }
@@ -79,7 +90,6 @@ const ArticlePage = () => {
 
     fetchArticleData();
 
-    // Firebase auth listener remains the same.
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
@@ -94,7 +104,6 @@ const ArticlePage = () => {
     return () => unsubscribe();
   }, [slug]);
 
-  // Check if current user follows this author (runs after initial data is loaded)
   useEffect(() => {
     if (!article?.authorId || !currentUser || !token) return;
 
@@ -113,17 +122,13 @@ const ArticlePage = () => {
     checkFollowingStatus();
   }, [article, currentUser, token]);
 
-  // --- BULLETPROOF FOLLOW/UNFOLLOW HANDLER ---
   const toggleFollow = async () => {
     if (!currentUser) return alert("يجب تسجيل الدخول للمتابعة");
-    if (!article?.authorId || !token)
-      return console.warn("Author ID or token not found");
+    if (!article?.authorId || !token) return;
 
-    // 1. Store the original state before the API call for potential rollback.
     const originalIsFollowing = isFollowing;
     const originalFollowersCount = followersCount;
 
-    // 2. Optimistically update the UI for a snappy user experience.
     setIsFollowing(!originalIsFollowing);
     setFollowersCount((prev) => prev + (originalIsFollowing ? -1 : 1));
 
@@ -131,62 +136,103 @@ const ArticlePage = () => {
       const url = `https://aljazeera-web.onrender.com/api/follow/${article.authorId}`;
       const config = { headers: { Authorization: `Bearer ${token}` } };
 
-      // 3. Use the correct HTTP method based on the action.
       if (originalIsFollowing) {
-        // Use DELETE for unfollowing
         await axios.delete(`${url}/unfollow`, config);
       } else {
-        // Use POST for following
         await axios.post(`${url}/follow`, {}, config);
       }
     } catch (err) {
-      console.error(
-        "Failed to update follow status. Reverting UI.",
-        err.response?.data || err
-      );
-
-      // 4. If the API call fails, revert the UI back to its original state.
+      console.error("Failed to update follow status:", err);
       setIsFollowing(originalIsFollowing);
       setFollowersCount(originalFollowersCount);
       alert("حدث خطأ ما، يرجى المحاولة مرة أخرى");
     }
   };
 
-  // --- RENDER LOGIC (No changes here) ---
+  const handleShare = async (platform = "copy") => {
+    const url = window.location.href;
+    const title = article?.title;
+
+    try {
+      if (platform === "copy") {
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } else if (platform === "twitter") {
+        window.open(
+          `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+            title
+          )}&url=${encodeURIComponent(url)}`,
+          "_blank"
+        );
+      } else if (platform === "whatsapp") {
+        window.open(
+          `https://wa.me/?text=${encodeURIComponent(title + " " + url)}`,
+          "_blank"
+        );
+      }
+      setShowShareMenu(false);
+    } catch (err) {
+      console.error("Share failed:", err);
+    }
+  };
+
+  const toggleBookmark = () => {
+    setIsBookmarked(!isBookmarked);
+    // Add bookmark functionality here
+  };
 
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center font-[tajawal,sans-serif]">
+      <div className="min-h-screen flex items-center justify-center font-[tajawal,sans-serif] bg-gradient-to-br from-green-50/50 via-white to-blue-50/50">
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-16 h-16 border-t-4 border-green-600 border-opacity-80 rounded-full"
-        ></motion.div>
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+            className="w-20 h-20 border-4 border-green-400/30 border-t-green-600 rounded-full mx-auto mb-6"
+          ></motion.div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-green-700 font-semibold text-lg"
+          >
+            جاري تحميل المقال...
+          </motion.p>
+        </motion.div>
       </div>
     );
 
   if (!article)
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-center px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center text-center px-4 bg-gradient-to-br from-red-50/50 via-white to-orange-50/50">
         <motion.div
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="text-6xl mb-4"
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 200 }}
+          className="bg-white/80 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-white/30"
         >
-          😕
+          <motion.div className="text-8xl mb-6 text-gradient animate-bounce">
+            😕
+          </motion.div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">
+            المقال غير موجود
+          </h2>
+          <p className="text-gray-600 mb-8 text-lg max-w-md">
+            قد يكون المقال قد تم حذفه أو العنوان غير صحيح
+          </p>
+          <Link
+            to="/blogs"
+            className="inline-flex items-center gap-2 px-8 py-3 bg-green-600 text-white rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+          >
+            <FiArrowLeft className="ml-2" />
+            تصفح المقالات الأخرى
+          </Link>
         </motion.div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">
-          المقال غير موجود
-        </h2>
-        <p className="text-gray-600 mb-6">
-          قد يكون المقال قد تم حذفه أو العنوان غير صحيح
-        </p>
-        <Link
-          to="/blogs"
-          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition shadow-md"
-        >
-          تصفح المقالات الأخرى
-        </Link>
       </div>
     );
 
@@ -200,228 +246,376 @@ const ArticlePage = () => {
         <title>{`${article.title} | Al Jazeera Blog`}</title>
         <meta name="description" content={plainTextContent.slice(0, 160)} />
       </Helmet>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="text-right px-4 md:px-8 lg:px-12 py-8 max-w-6xl mx-auto"
-      >
-        {/* Back Button */}
-        <motion.div whileHover={{ x: 5 }} className="mb-6">
-          <Link
-            to="/blogs"
-            className="flex items-center text-green-600 hover:text-green-800 font-medium"
-          >
-            <FiArrowLeft className="ml-1" /> العودة للمقالات
-          </Link>
-        </motion.div>
 
-        {/* Header */}
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="mb-10"
-        >
-          <motion.span
-            whileHover={{ scale: 1.05 }}
-            className="inline-block px-4 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium mb-4"
-          >
-            {article.category}
-          </motion.span>
-          <h1 className="text-3xl md:text-4xl font-bold text-green-800 my-3 leading-tight flex items-center gap-2 flex-wrap">
-            {article.title}
-            {article.verified && (
-              <FiCheckCircle
-                className="inline text-cyan-600"
-                title="مقال موثوق"
-              />
-            )}
-          </h1>
-          <div className="flex items-center flex-wrap gap-4 text-gray-600 mt-4">
-            <div className="flex items-center">
-              <FiUser className="ml-1 text-green-600" />
-              <span className="font-medium flex items-center gap-2">
-                <Link
-                  to={`/profile/${article.email}`}
-                  className="hover:underline"
-                >
-                  {article.author}
-                </Link>
-                {article.email === "ajua46244@gmail.com" && (
-                  <span className="bg-yellow-100 flex gap-1 text-yellow-800 text-xs px-2 py-0.5 rounded-full">
-                    <MdAdminPanelSettings /> Admin
-                  </span>
-                )}
-              </span>
-            </div>
-            <div className="flex items-center">
-              <FiClock className="ml-1 text-green-600" />
-              <span>
-                {new Date(article.createdAt).toLocaleDateString("ar-EG")}
-              </span>
-            </div>
-            <div className="flex items-center">
-              <FiBookOpen className="ml-1 text-green-600" />
-              <span>وقت القراءة: {readingTime} دقائق</span>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Blog Content */}
+      <div className="min-h-screen bg-gradient-to-br from-green-50/30 via-white to-blue-50/30 backdrop-blur-sm">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-6"
+          transition={{ duration: 0.6 }}
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
         >
-          {article.category === "الأشعار" ? (
-            <div className="text-center space-y-4 font-[Amiri] text-xl text-gray-800 leading-loose">
-              {article.content
-                .split("\n")
-                .filter((line) => line.trim() !== "")
-                .map((line, i) => (
-                  <p key={i} className="whitespace-pre-line">
-                    {line}
-                  </p>
-                ))}
-            </div>
-          ) : (
-            <div
-              className="prose max-w-none text-right break-words"
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(article.content),
-              }}
-            />
-          )}
-        </motion.div>
-
-        {/* Author Info & Follow */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.3 }}
-          className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 mb-12 flex flex-col md:flex-row items-center gap-6 border border-green-200"
-        >
-          <motion.div
-            whileHover={{ rotate: 10 }}
-            className="w-20 h-20 rounded-full overflow-hidden shadow-md bg-green-100 flex items-center justify-center"
-          >
-            {userPhoto ? (
-              <img
-                src={userPhoto}
-                alt={article.author}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="text-green-800 font-bold text-3xl">
-                {article.author?.charAt(0) || "؟"}
-              </span>
-            )}
+          {/* Enhanced Back Button */}
+          <motion.div whileHover={{ x: 5 }} className="mb-8">
+            <Link
+              to="/blogs"
+              className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm text-green-700 hover:text-green-900 font-medium px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-white/30"
+            >
+              <FiArrowLeft className="ml-2" />
+              العودة للمقالات
+            </Link>
           </motion.div>
-          <div className="text-center md:text-right flex-1">
-            <h4 className="font-bold text-xl text-green-800">
-              {article.author}
-            </h4>
-            <p className="text-gray-600 mt-2 break-all">
-              <a
-                href={`mailto:${article.email}`}
-                className="text-green-700 hover:underline"
-              >
-                {article.email}
-              </a>
-            </p>
-            <div className="flex items-center justify-center md:justify-start gap-4 mt-2">
-              <button
-                onClick={toggleFollow}
-                disabled={!currentUser || currentUser.email === article.email}
-                className={`px-4 py-1.5 rounded-full font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
-                  isFollowing
-                    ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                    : "bg-green-600 text-white hover:bg-green-700"
-                }`}
-              >
-                {isFollowing ? "إلغاء المتابعة" : "متابعة"}
-              </button>
-              <span className="text-gray-600 text-sm">
-                متابعين {followersCount}
-              </span>
-            </div>
-          </div>
-        </motion.div>
 
-        {/* Related Articles */}
-        {related.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.4 }}
-            className="mb-16"
-          >
-            <h3 className="text-2xl font-bold text-green-800 mb-6 pb-2 border-b-2 border-green-200 flex items-center gap-2">
-              <FaRegNewspaper className="text-green-600" />{" "}
-              <span>مقالات ذات صلة</span>
-            </h3>
-            <div className="grid md:grid-cols-3 gap-6">
-              {related.map((item, index) => (
-                <motion.div
-                  key={item._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.1 * index }}
-                  whileHover={{ y: -10 }}
-                  className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-all border border-gray-100"
-                >
-                  <span className="text-xs px-3 py-1 bg-green-100 text-green-800 rounded-full">
-                    {item.category}
-                  </span>
-                  <h4 className="font-bold text-lg my-3 text-gray-800">
-                    {item.title}
-                  </h4>
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {item.content.replace(/<[^>]+>/g, "").substring(0, 100)}...
-                  </p>
-                  <motion.div whileHover={{ x: -5 }}>
-                    <Link
-                      to={`/blog/${item.slug}`}
-                      className="text-green-600 hover:text-green-800 font-medium flex items-center justify-end"
-                    >
-                      <span>اقرأ المزيد</span>
-                      <motion.span
-                        animate={{ x: [0, 5, 0] }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                        }}
-                        className="mr-2"
+          {/* Main Content Container */}
+          <div className="grid lg:grid-cols-4 gap-8">
+            {/* Sidebar */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="lg:col-span-1 space-y-6"
+            >
+              {/* Stats Card */}
+              <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/30">
+                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <IoStatsChart className="text-green-600" />
+                  إحصائيات المقال
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600 flex items-center gap-2">
+                      <FiEye className="text-blue-500" />
+                      المشاهدات
+                    </span>
+                    <span className="font-semibold">
+                      {(article.views || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600 flex items-center gap-2">
+                      <IoTimeOutline className="text-green-500" />
+                      وقت القراءة
+                    </span>
+                    <span className="font-semibold">{readingTime} دقائق</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600 flex items-center gap-2">
+                      <FiCalendar className="text-purple-500" />
+                      تاريخ النشر
+                    </span>
+                    <span className="font-semibold">
+                      {new Date(article.createdAt).toLocaleDateString("ar-EG")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/30">
+                <div className="flex flex-col gap-3">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowShareMenu(!showShareMenu)}
+                    className="flex items-center gap-3 px-4 py-3 bg-blue-500/20 text-blue-700 rounded-xl hover:bg-blue-600/30 transition-all duration-300 border border-blue-400/30"
+                  >
+                    <FiShare2 />
+                    مشاركة
+                  </motion.button>
+
+                  <AnimatePresence>
+                    {showShareMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="bg-white/90 backdrop-blur-md rounded-xl p-3 space-y-2 border border-gray-200/50"
                       >
-                        →
-                      </motion.span>
-                    </Link>
-                  </motion.div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
+                        <button
+                          onClick={() => handleShare("copy")}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg hover:bg-gray-100/50 transition-colors"
+                        >
+                          <FaRegCopy />
+                          {copied ? "تم النسخ!" : "نسخ الرابط"}
+                        </button>
+                        <button
+                          onClick={() => handleShare("twitter")}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg hover:bg-blue-100/50 transition-colors"
+                        >
+                          𝕏 Twitter
+                        </button>
+                        <button
+                          onClick={() => handleShare("whatsapp")}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg hover:bg-green-100/50 transition-colors"
+                        >
+                          WhatsApp
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </motion.div>
 
-        {/* Comment Section Toggle */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mb-12"
-        >
-          <CommentSectionToggle
-            blogSlug={article.slug}
-            user={currentUser}
-            token={token}
-          />
+            {/* Main Article Content */}
+            <div className="lg:col-span-3">
+              {/* Enhanced Header */}
+              <motion.div
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white/80 backdrop-blur-lg rounded-3xl p-8 shadow-2xl mb-8 border border-white/30"
+              >
+                <motion.span
+                  whileHover={{ scale: 1.05 }}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500/20 to-blue-500/20 text-green-800 rounded-full text-sm font-semibold mb-4 border border-green-400/30"
+                >
+                  <MdOutlineTrendingUp />
+                  {article.category}
+                </motion.span>
+
+                <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-green-700 to-blue-700 bg-clip-text text-transparent my-4 leading-tight flex items-center gap-3 flex-wrap">
+                  {article.title}
+                  {article.verified && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 200 }}
+                      className="inline-flex items-center gap-1 text-cyan-600"
+                      title="مقال موثوق"
+                    >
+                      <MdOutlineVerified className="text-2xl" />
+                    </motion.span>
+                  )}
+                </h1>
+
+                <div className="flex items-center flex-wrap gap-6 text-gray-600 mt-6">
+                  <div className="flex items-center gap-2 bg-green-50/50 px-4 py-2 rounded-xl">
+                    <FiUser className="text-green-600" />
+                    <span className="font-medium flex items-center gap-2">
+                      <Link
+                        to={`/profile/${article.email}`}
+                        className="hover:underline text-green-700"
+                      >
+                        {article.author}
+                      </Link>
+                      {article.email === "ajua46244@gmail.com" && (
+                        <span className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1">
+                          <MdAdminPanelSettings /> Admin
+                        </span>
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 bg-blue-50/50 px-4 py-2 rounded-xl">
+                    <FiCalendar className="text-blue-600" />
+                    <span>
+                      {new Date(article.createdAt).toLocaleDateString("ar-EG")}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 bg-purple-50/50 px-4 py-2 rounded-xl">
+                    <FiBookOpen className="text-purple-600" />
+                    <span>وقت القراءة: {readingTime} دقائق</span>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Enhanced Blog Content */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl mb-8 border border-white/30 overflow-hidden"
+              >
+                {article.category === "الأشعار" ? (
+                  <div className="p-8 md:p-12 text-center space-y-6 font-[Amiri] text-2xl text-gray-800 leading-loose bg-gradient-to-br from-green-50/30 to-blue-50/30">
+                    {article.content
+                      .split("\n")
+                      .filter((line) => line.trim() !== "")
+                      .map((line, i) => (
+                        <motion.p
+                          key={i}
+                          className="whitespace-pre-line"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.1 }}
+                        >
+                          {line}
+                        </motion.p>
+                      ))}
+                  </div>
+                ) : (
+                  <div className="p-8 md:p-12">
+                    <div
+                      className="prose prose-lg max-w-none text-right break-words prose-headings:text-green-800 prose-p:text-gray-700 prose-strong:text-green-700 prose-a:text-blue-600 prose-blockquote:border-green-400 prose-blockquote:bg-green-50/50 prose-blockquote:italic prose-blockquote:p-4 prose-blockquote:rounded-xl"
+                      dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(article.content),
+                      }}
+                    />
+                  </div>
+                )}
+              </motion.div>
+
+              {/* Enhanced Author Info */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+                className="bg-gradient-to-r from-green-400/10 to-blue-400/10 rounded-3xl p-8 mb-12 border border-white/30 backdrop-blur-lg shadow-2xl"
+              >
+                <div className="flex flex-col md:flex-row items-center gap-8">
+                  <motion.div
+                    whileHover={{ scale: 1.05, rotate: 5 }}
+                    className="relative"
+                  >
+                    <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-green-600 to-blue-300 p-1">
+                      {userPhoto ? (
+                        <img
+                          src={userPhoto}
+                          alt={article.author}
+                          className="w-full h-full object-cover rounded-xl"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-white/90 rounded-xl flex items-center justify-center">
+                          <span className="text-3xl font-bold text-green-700">
+                            {article.author?.charAt(0) || "؟"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 bg-green-500 text-white p-1 rounded-full">
+                      <FiUser className="w-4 h-4" />
+                    </div>
+                  </motion.div>
+
+                  <div className="text-center md:text-right flex-1">
+                    <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
+                      <h4 className="font-bold text-2xl text-green-800">
+                        {article.author}
+                      </h4>
+                      {article.verified && (
+                        <MdOutlineVerified className="text-2xl text-cyan-600" />
+                      )}
+                    </div>
+
+                    <p className="text-gray-600 mb-6 break-all">
+                      <a
+                        href={`mailto:${article.email}`}
+                        className="text-green-700 hover:underline font-medium"
+                      >
+                        {article.email}
+                      </a>
+                    </p>
+
+                    <div className="flex items-center justify-center md:justify-start gap-6">
+                      <button
+                        onClick={toggleFollow}
+                        disabled={
+                          !currentUser || currentUser.email === article.email
+                        }
+                        className={`px-6 py-2 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ${
+                          isFollowing
+                            ? "bg-gray-200/80 text-gray-800 hover:bg-gray-300/80 backdrop-blur-sm"
+                            : " bg-green-600 text-white hover:from-green-700 hover:to-blue-700 shadow-lg hover:shadow-xl"
+                        }`}
+                      >
+                        <FiUsers />
+                        {isFollowing ? "إلغاء المتابعة" : "متابعة الكاتب"}
+                      </button>
+
+                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <span className="flex items-center gap-1 bg-white/50 px-3 py-1 rounded-lg">
+                          <FiUsers className="text-green-600" />
+                          {followersCount} متابع
+                        </span>
+                        <span className="flex items-center gap-1 bg-white/50 px-3 py-1 rounded-lg">
+                          <FiBookOpen className="text-blue-600" />
+                          {followingCount} متابع
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Enhanced Related Articles */}
+              {related.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.4 }}
+                  className="mb-16"
+                >
+                  <h3 className="text-3xl font-bold bg-gradient-to-r from-green-700 to-blue-700 bg-clip-text text-transparent mb-8 pb-4 border-b-2 border-green-200/50 flex items-center gap-3">
+                    <FaRegNewspaper className="text-green-600 text-2xl" />
+                    مقالات ذات صلة
+                  </h3>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {related.map((item, index) => (
+                      <motion.article
+                        key={item._id}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.1 * index }}
+                        whileHover={{ y: -8, scale: 1.02 }}
+                        className="bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-500 border border-white/30 group"
+                      >
+                        <span className="inline-block px-3 py-1 bg-gradient-to-r from-green-500/20 to-blue-500/20 text-green-800 rounded-full text-xs font-semibold mb-4">
+                          {item.category}
+                        </span>
+                        <h4 className="font-bold text-lg my-3 text-gray-800 group-hover:text-green-700 transition-colors line-clamp-2">
+                          {item.title}
+                        </h4>
+                        <p className="text-gray-600 text-sm mb-4 line-clamp-3 leading-relaxed">
+                          {item.content
+                            .replace(/<[^>]+>/g, "")
+                            .substring(0, 120)}
+                          ...
+                        </p>
+                        <motion.div whileHover={{ x: -5 }}>
+                          <Link
+                            to={`/blog/${item.slug}`}
+                            className="inline-flex items-center gap-2 text-green-600 hover:text-green-800 font-semibold transition-all group"
+                          >
+                            <span>اقرأ المزيد</span>
+                            <motion.span
+                              animate={{ x: [0, 5, 0] }}
+                              transition={{
+                                duration: 1.5,
+                                repeat: Infinity,
+                              }}
+                              className="group-hover:translate-x-1 transition-transform"
+                            >
+                              →
+                            </motion.span>
+                          </Link>
+                        </motion.div>
+                      </motion.article>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Enhanced Comment Section */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="mb-12"
+              >
+                <CommentSectionToggle
+                  blogSlug={article.slug}
+                  user={currentUser}
+                  token={token}
+                />
+              </motion.div>
+            </div>
+          </div>
         </motion.div>
-      </motion.div>
+      </div>
     </>
   );
 };

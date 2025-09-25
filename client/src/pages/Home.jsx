@@ -114,7 +114,7 @@ const Home = () => {
             transition={{ delay: 0.5, duration: 0.8 }}
             className="text-5xl md:text-7xl lg:text-8xl text-white font-extrabold mb-6 leading-tight"
           >
-            مرحباً بكم في{" "}
+            مرحباً بكم إلى{" "}
             <span className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 bg-clip-text text-transparent">
               القرطاسية
             </span>

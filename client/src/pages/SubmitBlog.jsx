@@ -46,7 +46,7 @@ const SubmitBlog = () => {
     "فوز",
     "حكمة",
     "سعادة",
-    "الصف الأول",
+    "نجوم",
   ];
 
   // ✨ START: Configuration for React Quill Toolbar ✨

@@ -30,7 +30,7 @@ const communityNames = {
   fouz: "فوز",
   hikma: "حكمة",
   saada: "سعادة",
-  "class 1": "الصف الأول",
+  nujoom: "نجوم",
 };
 
 const arabicToKeyMap = Object.entries(communityNames).reduce(

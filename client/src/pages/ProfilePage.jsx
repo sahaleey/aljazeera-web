@@ -295,7 +295,7 @@ const ProfilePage = () => {
               <div className="text-2xl font-bold text-green-600">
                 {followersCount}
               </div>
-              <div className="text-sm text-gray-600">متابعون</div>
+              <div className="text-sm text-gray-600">المتابعين</div>
             </button>
             <button
               onClick={() => handleShowFollowList("following")}
@@ -304,7 +304,7 @@ const ProfilePage = () => {
               <div className="text-2xl font-bold text-green-600">
                 {followingCount}
               </div>
-              <div className="text-sm text-gray-600">متابَعون</div>
+              <div className="text-sm text-gray-600">اتباع</div>
             </button>
           </div>
         </motion.div>

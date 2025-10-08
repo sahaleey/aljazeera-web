@@ -529,10 +529,6 @@ const ArticlePage = () => {
                           <FiUsers className="text-green-600" />
                           {followersCount} متابع
                         </span>
-                        <span className="flex items-center gap-1 bg-white/50 px-3 py-1 rounded-lg">
-                          <FiBookOpen className="text-blue-600" />
-                          {followingCount} متابع
-                        </span>
                       </div>
                     </div>
                   </div>

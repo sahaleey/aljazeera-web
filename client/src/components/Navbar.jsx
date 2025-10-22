@@ -19,7 +19,7 @@ const Navbar = () => {
       try {
         const token = await currentUser.getIdToken(true);
         const res = await axios.get(
-          "https://aljazeera-web.onrender.com/api/users/me",
+          "https://aljazeera-web-my5l.onrender.com/api/users/me",
           {
             headers: {
               Authorization: `Bearer ${token}`,

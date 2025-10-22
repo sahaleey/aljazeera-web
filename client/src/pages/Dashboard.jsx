@@ -45,7 +45,7 @@ const Dashboard = () => {
 
       try {
         await axios.post(
-          "https://aljazeera-web.onrender.com/api/users/register",
+          "https://aljazeera-web-my5l.onrender.com/api/users/register",
           {
             email,
             name: currentUser.displayName || email.split("@")[0],
@@ -59,7 +59,7 @@ const Dashboard = () => {
         );
 
         const res = await axios.get(
-          "https://aljazeera-web.onrender.com/api/users/me",
+          "https://aljazeera-web-my5l.onrender.com/api/users/me",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -84,11 +84,11 @@ const Dashboard = () => {
 
           const [followersRes, followingRes] = await Promise.all([
             axios.get(
-              `https://aljazeera-web.onrender.com/api/follow/${userId}/followers`,
+              `https://aljazeera-web-my5l.onrender.com/api/follow/${userId}/followers`,
               config
             ),
             axios.get(
-              `https://aljazeera-web.onrender.com/api/follow/${userId}/following`,
+              `https://aljazeera-web-my5l.onrender.com/api/follow/${userId}/following`,
               config
             ),
           ]);
@@ -113,7 +113,7 @@ const Dashboard = () => {
   const fetchUserBlogs = async (email) => {
     try {
       const res = await axios.get(
-        `https://aljazeera-web.onrender.com/api/blogs/user?email=${email}`
+        `https://aljazeera-web-my5l.onrender.com/api/blogs/user?email=${email}`
       );
       const data = res.data;
 
@@ -152,7 +152,7 @@ const Dashboard = () => {
 
       // ✅ Include token in headers
       await axios.delete(
-        `https://aljazeera-web.onrender.com/api/blogs/${blogId}`,
+        `https://aljazeera-web-my5l.onrender.com/api/blogs/${blogId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

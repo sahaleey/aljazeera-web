@@ -131,7 +131,7 @@ const ProfilePage = () => {
       setError("");
       try {
         const res = await axios.get(
-          `https://aljazeera-web.onrender.com/api/user/profile/${email}`
+          `https://aljazeera-web-my5l.onrender.com/api/user/profile/${email}`
         );
         const userProfile = res.data;
         setProfile(userProfile);
@@ -140,10 +140,10 @@ const ProfilePage = () => {
           const userId = userProfile._id;
           const [followersRes, followingRes] = await Promise.all([
             axios.get(
-              `https://aljazeera-web.onrender.com/api/follow/${userId}/followers`
+              `https://aljazeera-web-my5l.onrender.com/api/follow/${userId}/followers`
             ),
             axios.get(
-              `https://aljazeera-web.onrender.com/api/follow/${userId}/following`
+              `https://aljazeera-web-my5l.onrender.com/api/follow/${userId}/following`
             ),
           ]);
           setFollowersCount(followersRes.data.followers || 0);
@@ -172,7 +172,7 @@ const ProfilePage = () => {
 
     try {
       const res = await axios.get(
-        `https://aljazeera-web.onrender.com/api/follow/${profile._id}/${type}/list`
+        `https://aljazeera-web-my5l.onrender.com/api/follow/${profile._id}/${type}/list`
       );
       setModalUsers(res.data);
     } catch (err) {

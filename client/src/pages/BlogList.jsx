@@ -122,7 +122,7 @@ const NotificationBell = ({ userEmail }) => {
       try {
         const token = await getAuth().currentUser.getIdToken();
         const res = await axios.get(
-          `https://aljazeera-web.onrender.com/api/notifications`,
+          `https://aljazeera-web-my5l.onrender.com/api/notifications`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -145,7 +145,7 @@ const NotificationBell = ({ userEmail }) => {
       try {
         const token = await getAuth().currentUser.getIdToken();
         await axios.patch(
-          `https://aljazeera-web.onrender.com/api/notifications/mark-read`,
+          `https://aljazeera-web-my5l.onrender.com/api/notifications/mark-read`,
           {},
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -164,7 +164,7 @@ const NotificationBell = ({ userEmail }) => {
     try {
       const token = await getAuth().currentUser.getIdToken();
       await axios.delete(
-        `https://aljazeera-web.onrender.com/api/notifications/clear-all`,
+        `https://aljazeera-web-my5l.onrender.com/api/notifications/clear-all`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -359,7 +359,7 @@ const BlogList = ({ userEmail }) => {
       try {
         if (userEmail) {
           const userRes = await axios.get(
-            `https://aljazeera-web.onrender.com/api/users/status/${userEmail}`
+            `https://aljazeera-web-my5l.onrender.com/api/users/status/${userEmail}`
           );
           const isUserBlocked = userRes.data.blocked;
           const isAdmin = ADMIN_EMAIL.includes(userEmail);
@@ -369,7 +369,7 @@ const BlogList = ({ userEmail }) => {
           }
         }
         const blogRes = await axios.get(
-          "https://aljazeera-web.onrender.com/api/blogs"
+          "https://aljazeera-web-my5l.onrender.com/api/blogs"
         );
         setArticles(blogRes.data);
       } catch (err) {
@@ -387,7 +387,7 @@ const BlogList = ({ userEmail }) => {
     try {
       const token = await getAuth().currentUser.getIdToken();
       const res = await axios.patch(
-        `https://aljazeera-web.onrender.com/api/blogs/like/${slug}`,
+        `https://aljazeera-web-my5l.onrender.com/api/blogs/like/${slug}`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -411,7 +411,7 @@ const BlogList = ({ userEmail }) => {
     try {
       const token = await getAuth().currentUser.getIdToken();
       const res = await axios.patch(
-        `https://aljazeera-web.onrender.com/api/blogs/dislike/${slug}`,
+        `https://aljazeera-web-my5l.onrender.com/api/blogs/dislike/${slug}`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -433,7 +433,7 @@ const BlogList = ({ userEmail }) => {
   const handleView = async (slug) => {
     try {
       const res = await axios.patch(
-        `https://aljazeera-web.onrender.com/api/blogs/view/${slug}`,
+        `https://aljazeera-web-my5l.onrender.com/api/blogs/view/${slug}`,
         { email: userEmail }
       );
       setArticles((prev) =>

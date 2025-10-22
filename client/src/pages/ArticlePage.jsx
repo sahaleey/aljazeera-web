@@ -49,7 +49,7 @@ const ArticlePage = () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `https://aljazeera-web.onrender.com/api/blogs/${slug}`
+          `https://aljazeera-web-my5l.onrender.com/api/blogs/${slug}`
         );
         const blog = res.data;
         setArticle(blog);
@@ -57,16 +57,16 @@ const ArticlePage = () => {
         if (blog?.authorId && blog?.email && blog?.category) {
           const promises = [
             axios.get(
-              `https://aljazeera-web.onrender.com/api/users/${blog.email}`
+              `https://aljazeera-web-my5l.onrender.com/api/users/${blog.email}`
             ),
             axios.get(
-              `https://aljazeera-web.onrender.com/api/blogs?category=${blog.category}`
+              `https://aljazeera-web-my5l.onrender.com/api/blogs?category=${blog.category}`
             ),
             axios.get(
-              `https://aljazeera-web.onrender.com/api/follow/${blog.authorId}/followers`
+              `https://aljazeera-web-my5l.onrender.com/api/follow/${blog.authorId}/followers`
             ),
             axios.get(
-              `https://aljazeera-web.onrender.com/api/follow/${blog.authorId}/following`
+              `https://aljazeera-web-my5l.onrender.com/api/follow/${blog.authorId}/following`
             ),
           ];
 
@@ -110,7 +110,7 @@ const ArticlePage = () => {
     const checkFollowingStatus = async () => {
       try {
         const res = await axios.get(
-          `https://aljazeera-web.onrender.com/api/follow/check/${article.authorId}`,
+          `https://aljazeera-web-my5l.onrender.com/api/follow/check/${article.authorId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setIsFollowing(res.data.isFollowing);
@@ -133,7 +133,7 @@ const ArticlePage = () => {
     setFollowersCount((prev) => prev + (originalIsFollowing ? -1 : 1));
 
     try {
-      const url = `https://aljazeera-web.onrender.com/api/follow/${article.authorId}`;
+      const url = `https://aljazeera-web-my5l.onrender.com/api/follow/${article.authorId}`;
       const config = { headers: { Authorization: `Bearer ${token}` } };
 
       if (originalIsFollowing) {

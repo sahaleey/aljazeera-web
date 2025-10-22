@@ -10,7 +10,7 @@ const IntroScreen = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       navigate("/home");
-    }, 5320); // ⏱️ Looks like you had an extra zero 😅
+    }, 5320);
 
     return () => clearTimeout(timer);
   }, [navigate]);

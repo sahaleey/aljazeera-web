@@ -32,7 +32,7 @@ const Comments = ({ blogSlug, user, token }) => {
   const fetchComments = async () => {
     try {
       const res = await axios.get(
-        `https://aljazeera-web.onrender.com/api/blogs/${blogSlug}/comments`
+        `https://aljazeera-web-my5l.onrender.com/api/blogs/${blogSlug}/comments`
       );
       setComments(res.data);
     } catch (error) {
@@ -55,7 +55,7 @@ const Comments = ({ blogSlug, user, token }) => {
     setSubmitting(true);
     try {
       const res = await axios.post(
-        `https://aljazeera-web.onrender.com/api/blogs/${blogSlug}/comments`,
+        `https://aljazeera-web-my5l.onrender.com/api/blogs/${blogSlug}/comments`,
         { content: newComment },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -81,7 +81,7 @@ const Comments = ({ blogSlug, user, token }) => {
 
     try {
       await axios.delete(
-        `https://aljazeera-web.onrender.com/api/blogs/${blogSlug}/comments/${commentId}`,
+        `https://aljazeera-web-my5l.onrender.com/api/blogs/${blogSlug}/comments/${commentId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -105,7 +105,7 @@ const Comments = ({ blogSlug, user, token }) => {
 
     try {
       await axios.delete(
-        `https://aljazeera-web.onrender.com/api/blogs/${blogSlug}/comments/${commentId}/replies/${replyId}`,
+        `https://aljazeera-web-my5l.onrender.com/api/blogs/${blogSlug}/comments/${commentId}/replies/${replyId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -131,7 +131,7 @@ const Comments = ({ blogSlug, user, token }) => {
 
     try {
       const res = await axios.patch(
-        `https://aljazeera-web.onrender.com/api/blogs/${blogSlug}/comments/${commentId}`,
+        `https://aljazeera-web-my5l.onrender.com/api/blogs/${blogSlug}/comments/${commentId}`,
         { content: editContent },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -167,7 +167,7 @@ const Comments = ({ blogSlug, user, token }) => {
 
     try {
       const res = await axios.patch(
-        `https://aljazeera-web.onrender.com/api/blogs/${blogSlug}/comments/${commentId}/like`,
+        `https://aljazeera-web-my5l.onrender.com/api/blogs/${blogSlug}/comments/${commentId}/like`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -192,7 +192,7 @@ const Comments = ({ blogSlug, user, token }) => {
 
     try {
       const res = await axios.post(
-        `https://aljazeera-web.onrender.com/api/blogs/${blogSlug}/comments/${commentId}/reply`,
+        `https://aljazeera-web-my5l.onrender.com/api/blogs/${blogSlug}/comments/${commentId}/reply`,
         { content: replyContent },
         { headers: { Authorization: `Bearer ${token}` } }
       );

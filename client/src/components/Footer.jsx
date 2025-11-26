@@ -104,7 +104,7 @@ const Footer = () => {
 
               <span>بواسطة</span>
               <a
-                href="https://dev-scp.vercel.app/"
+                href="https://www.sahaleey.me"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-green-300 hover:text-green-100 transition"
